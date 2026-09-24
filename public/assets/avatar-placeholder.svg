@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="goldGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fff8e7"/>
+      <stop offset="100%" stop-color="#edd59e"/>
+    </radialGradient>
+    <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b8860b"/>
+      <stop offset="100%" stop-color="#7c1417"/>
+    </linearGradient>
+  </defs>
+  <circle cx="150" cy="150" r="148" fill="url(#goldGrad)" stroke="#c59b27" stroke-width="4"/>
+  <circle cx="150" cy="115" r="48" fill="url(#avatarGrad)"/>
+  <path d="M 65 240 C 65 180, 235 180, 235 240 Z" fill="url(#avatarGrad)"/>
+</svg>

@@ -1,0 +1,550 @@
+/* ==========================================================================
+   सदानीरा महोत्सव (SADANEERA MAHOTSAV) - PORTRAIT INVITATION CARD THEMES
+   All Themes in Majestic Portrait Mode with Large Guest Photo Frame
+   ========================================================================== */
+
+/* Main Portrait Card Canvas Container (720px x 1040px) */
+.invitation-card {
+  width: 720px;
+  height: 1040px;
+  position: relative;
+  background-color: #fffaf0;
+  box-sizing: border-box;
+  font-family: 'Outfit', 'Tiro Devanagari Hindi', serif;
+  color: #2c1a0e;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 36px 24px;
+  margin: 0 auto;
+}
+
+/* Outer Border & Ornate Frame */
+.invitation-card .card-border-outer {
+  position: absolute;
+  inset: 12px;
+  border: 3.5px double #c59b27;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.invitation-card .card-border-inner {
+  position: absolute;
+  inset: 20px;
+  border: 1.5px solid rgba(197, 155, 39, 0.55);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Corner Flourishes */
+.invitation-card .corner-flourish {
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.invitation-card .corner-tl { top: 14px; left: 14px; }
+.invitation-card .corner-tr { top: 14px; right: 14px; transform: scaleX(-1); }
+.invitation-card .corner-bl { bottom: 14px; left: 14px; transform: scaleY(-1); }
+.invitation-card .corner-br { bottom: 14px; right: 14px; transform: scale(-1); }
+
+.corner-svg {
+  width: 50px;
+  height: 50px;
+  fill: #c59b27;
+}
+
+/* ==========================================================================
+   Header Section
+   ========================================================================== */
+.card-header-section {
+  text-align: center;
+  position: relative;
+  z-index: 5;
+  padding-top: 6px;
+}
+
+.card-invocation {
+  font-size: 0.92rem;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #b8860b;
+  margin-bottom: 2px;
+}
+
+.card-main-title {
+  font-family: 'Rozha One', 'Cinzel Decorative', serif;
+  font-size: 2.7rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 1.5px;
+  margin: 2px 0 0;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.12);
+}
+
+.card-subtitle {
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  margin-top: 3px;
+  color: #5a422d;
+}
+
+.card-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 10px auto 6px;
+  width: 70%;
+}
+
+.card-divider .line {
+  flex: 1;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, #c59b27, transparent);
+}
+
+.card-divider .symbol {
+  color: #c59b27;
+  font-size: 1.25rem;
+}
+
+/* ==========================================================================
+   Center Body: Big Photo & Guest Details (Portrait Stack)
+   ========================================================================== */
+.card-body-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 5;
+  margin: 6px 0 10px;
+}
+
+/* Big Guest Photo Frame (225px x 225px) */
+.guest-photo-container {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.guest-photo-frame {
+  width: 225px;
+  height: 225px;
+  border-radius: 50%;
+  padding: 6px;
+  background: linear-gradient(135deg, #ffe57f, #b8860b, #daa520, #fff7c2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.guest-photo-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #ffffff;
+  background-color: #f7f1e5;
+}
+
+.guest-photo-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Editable Guest Honor Badge */
+.guest-honor-badge {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #b8860b, #7e5c06);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  padding: 5px 22px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border: 1.5px solid #ffe57f;
+}
+
+/* Guest Text Details */
+.guest-text-details {
+  max-width: 620px;
+  margin-top: 4px;
+}
+
+.guest-invitation-lead {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #8b6508;
+  margin-bottom: 2px;
+}
+
+.guest-full-name {
+  font-family: 'Rozha One', 'Cinzel', serif;
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.guest-title-prefix {
+  color: #c59b27;
+  margin-right: 8px;
+  font-weight: 800;
+}
+
+.guest-about-text {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin-top: 6px;
+  color: #423023;
+}
+
+.guest-cordial-note {
+  font-size: 0.96rem;
+  line-height: 1.55;
+  font-style: italic;
+  margin-top: 10px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 8px;
+  border-left: 3.5px solid #c59b27;
+  border-right: 3.5px solid #c59b27;
+}
+
+/* ==========================================================================
+   Event Details Section
+   ========================================================================== */
+.card-event-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(197, 155, 39, 0.4);
+  border-radius: 10px;
+  padding: 10px 14px;
+  position: relative;
+  z-index: 5;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+}
+
+.event-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.event-detail-item .icon {
+  font-size: 1.35rem;
+  color: #b8860b;
+}
+
+.event-detail-item .label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b6508;
+}
+
+.event-detail-item .value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+/* ==========================================================================
+   Footer Section
+   ========================================================================== */
+.card-footer-section {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 4px 6px 0;
+  position: relative;
+  z-index: 5;
+}
+
+.rsvp-block {
+  text-align: left;
+}
+
+.rsvp-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8b6508;
+}
+
+.rsvp-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.card-security-block {
+  text-align: right;
+  font-size: 0.72rem;
+  color: #7b6953;
+}
+
+.card-code-badge {
+  display: inline-block;
+  background: rgba(197, 155, 39, 0.18);
+  color: #6d420a;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+  border: 1px solid rgba(197, 155, 39, 0.35);
+}
+
+/* ==========================================================================
+   THEME 1: शाही स्वर्ण एवं रोली (Royal Saffron & Gold - Default)
+   ========================================================================== */
+.invitation-card.theme-royal-gold {
+  background: radial-gradient(circle at 50% 25%, #fffdf8 0%, #fef6e7 55%, #f6e6cb 100%);
+  color: #381907;
+}
+
+.invitation-card.theme-royal-gold .card-main-title {
+  color: #8b181b;
+  text-shadow: 1px 1px 0px #ffd700, 2px 2px 4px rgba(139, 24, 27, 0.2);
+}
+
+.invitation-card.theme-royal-gold .guest-full-name {
+  color: #7c1215;
+}
+
+/* ==========================================================================
+   THEME 2: पवित्र सदानीरा नील (Sacred River Azure & Gold)
+   ========================================================================== */
+.invitation-card.theme-sacred-river {
+  background: radial-gradient(circle at 50% 25%, #f4f9fd 0%, #e2eef7 55%, #cde2f2 100%);
+  color: #0b2842;
+}
+
+.invitation-card.theme-sacred-river .card-border-outer {
+  border-color: #0d4a7d;
+}
+
+.invitation-card.theme-sacred-river .corner-svg {
+  fill: #0d4a7d;
+}
+
+.invitation-card.theme-sacred-river .card-invocation {
+  color: #0d4a7d;
+}
+
+.invitation-card.theme-sacred-river .card-main-title {
+  color: #0b3459;
+  text-shadow: 1px 1px 0px #ffd700, 2px 2px 4px rgba(11, 52, 89, 0.25);
+}
+
+.invitation-card.theme-sacred-river .guest-full-name {
+  color: #072e50;
+}
+
+.invitation-card.theme-sacred-river .guest-photo-frame {
+  background: linear-gradient(135deg, #ffe57f, #0d4a7d, #daa520, #e2eef7);
+}
+
+.invitation-card.theme-sacred-river .guest-honor-badge {
+  background: linear-gradient(135deg, #0d4a7d, #072a48);
+  border-color: #ffe57f;
+}
+
+.invitation-card.theme-sacred-river .guest-cordial-note {
+  border-color: #0d4a7d;
+}
+
+/* ==========================================================================
+   THEME 3: शाही मखमली मरून (Imperial Velvet Maroon)
+   ========================================================================== */
+.invitation-card.theme-imperial-maroon {
+  background: radial-gradient(circle at 50% 25%, #fffdfa 0%, #faeee4 55%, #f3d7c4 100%);
+  color: #2e0d12;
+}
+
+.invitation-card.theme-imperial-maroon .card-border-outer {
+  border-color: #6b0c19;
+}
+
+.invitation-card.theme-imperial-maroon .corner-svg {
+  fill: #6b0c19;
+}
+
+.invitation-card.theme-imperial-maroon .card-main-title {
+  color: #590913;
+  text-shadow: 1px 1px 0px #daa520, 2px 2px 4px rgba(89, 9, 19, 0.2);
+}
+
+.invitation-card.theme-imperial-maroon .guest-full-name {
+  color: #590913;
+}
+
+.invitation-card.theme-imperial-maroon .guest-honor-badge {
+  background: linear-gradient(135deg, #6b0c19, #42060e);
+}
+
+/* ==========================================================================
+   THEME 4: वैदिक चंदन एवं पीतांबर (Vedic Sandalwood & Ochre)
+   ========================================================================== */
+.invitation-card.theme-vedic-sandalwood {
+  background: radial-gradient(circle at 50% 25%, #fffdf3 0%, #fdf5d6 55%, #f7e6ad 100%);
+  color: #3b2807;
+}
+
+.invitation-card.theme-vedic-sandalwood .card-border-outer {
+  border-color: #b37400;
+}
+
+.invitation-card.theme-vedic-sandalwood .corner-svg {
+  fill: #b37400;
+}
+
+.invitation-card.theme-vedic-sandalwood .card-invocation {
+  color: #b37400;
+}
+
+.invitation-card.theme-vedic-sandalwood .card-main-title {
+  color: #945700;
+  text-shadow: 1px 1px 0px #ffe57f, 2px 2px 4px rgba(148, 87, 0, 0.2);
+}
+
+.invitation-card.theme-vedic-sandalwood .guest-full-name {
+  color: #7a4600;
+}
+
+.invitation-card.theme-vedic-sandalwood .guest-honor-badge {
+  background: linear-gradient(135deg, #b37400, #7a4600);
+}
+
+/* ==========================================================================
+   THEME 5: राजसी पन्ना एवं स्वर्ण (Emerald Royal Forest & Gold)
+   ========================================================================== */
+.invitation-card.theme-emerald-gold {
+  background: radial-gradient(circle at 50% 25%, #f6fcf8 0%, #e4f5ea 55%, #c8ebd2 100%);
+  color: #0b3017;
+}
+
+.invitation-card.theme-emerald-gold .card-border-outer {
+  border-color: #125e2e;
+}
+
+.invitation-card.theme-emerald-gold .corner-svg {
+  fill: #125e2e;
+}
+
+.invitation-card.theme-emerald-gold .card-invocation {
+  color: #125e2e;
+}
+
+.invitation-card.theme-emerald-gold .card-main-title {
+  color: #0d4622;
+  text-shadow: 1px 1px 0px #ffd700, 2px 2px 4px rgba(13, 70, 34, 0.2);
+}
+
+.invitation-card.theme-emerald-gold .guest-full-name {
+  color: #0a3d1c;
+}
+
+.invitation-card.theme-emerald-gold .guest-photo-frame {
+  background: linear-gradient(135deg, #ffe57f, #125e2e, #daa520, #e4f5ea);
+}
+
+.invitation-card.theme-emerald-gold .guest-honor-badge {
+  background: linear-gradient(135deg, #125e2e, #0a371a);
+  border-color: #ffe57f;
+}
+
+.invitation-card.theme-emerald-gold .guest-cordial-note {
+  border-color: #125e2e;
+}
+
+/* ==========================================================================
+   THEME 6: शास्त्रीय जामुनी एवं स्वर्ण (Regal Amethyst & Gold)
+   ========================================================================== */
+.invitation-card.theme-regal-purple {
+  background: radial-gradient(circle at 50% 25%, #faf6fd 0%, #f1e4f9 55%, #dfc7ef 100%);
+  color: #2b0e36;
+}
+
+.invitation-card.theme-regal-purple .card-border-outer {
+  border-color: #5c1875;
+}
+
+.invitation-card.theme-regal-purple .corner-svg {
+  fill: #5c1875;
+}
+
+.invitation-card.theme-regal-purple .card-invocation {
+  color: #5c1875;
+}
+
+.invitation-card.theme-regal-purple .card-main-title {
+  color: #4a115f;
+  text-shadow: 1px 1px 0px #ffd700, 2px 2px 4px rgba(74, 17, 95, 0.2);
+}
+
+.invitation-card.theme-regal-purple .guest-full-name {
+  color: #3e0c50;
+}
+
+.invitation-card.theme-regal-purple .guest-photo-frame {
+  background: linear-gradient(135deg, #ffe57f, #5c1875, #daa520, #f1e4f9);
+}
+
+.invitation-card.theme-regal-purple .guest-honor-badge {
+  background: linear-gradient(135deg, #5c1875, #350845);
+  border-color: #ffe57f;
+}
+
+.invitation-card.theme-regal-purple .guest-cordial-note {
+  border-color: #5c1875;
+}
+
+/* Print Rules for Portrait Cards */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .invitation-card, .invitation-card * {
+    visibility: visible;
+  }
+  .invitation-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    height: 100% !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+}
