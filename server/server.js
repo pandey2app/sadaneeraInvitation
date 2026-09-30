@@ -69,8 +69,7 @@ app.listen(PORT, () => {
   console.log(`=======================================================`);
   console.log(`🌸 सदानीरा महोत्सव (Sadaneera Mahotsav) Invitation System`);
   console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`🔐 Default Super Admin: superadmin / Admin@Sadaneera2026`);
-  console.log(`👤 Default Sub Admin:   admin_user / Admin@123`);
+  console.log(`🔐 Authentication: Login required for all protected operations.`);
   console.log(`=======================================================`);
 });
 

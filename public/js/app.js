@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       eventVenue: 'मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर',
       photoData: '',
       checksum: '',
-      cardCode: 'SN-00001-XXXX'
+      cardCode: 'SN-0001-XXXX'
     },
     // Scale for live preview (tuned for 720x1040 portrait card)
     previewScale: 0.58,
@@ -225,17 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
       submitBtn.disabled = false;
       submitBtn.textContent = 'लॉगिन करें (Sign In)';
     }
-  });
-
-  // Demo Credentials Fill Buttons
-  document.getElementById('btnFillSuperAdmin')?.addEventListener('click', () => {
-    document.getElementById('loginUsername').value = 'superadmin';
-    document.getElementById('loginPassword').value = 'Admin@Sadaneera2026';
-  });
-
-  document.getElementById('btnFillAdmin')?.addEventListener('click', () => {
-    document.getElementById('loginUsername').value = 'admin_user';
-    document.getElementById('loginPassword').value = 'Admin@123';
   });
 
   // Logout Handler
@@ -557,19 +546,21 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       const res = await API.createCard(payload);
-      showToast(`सफलतापूर्वक रिकॉर्ड किया गया! कार्ड कोड: ${res.card.card_code}`, 'success');
 
-      // Update state with confirmed card code from DB
+      // Update the preview with the code/checksum returned by the server.
       state.form.cardCode = res.card.card_code;
       state.form.checksum = res.card.checksum ? `SN-${res.card.checksum.slice(0,8).toUpperCase()}` : state.form.checksum;
       renderLivePreview();
 
-      // Offer immediate download or view in records
-      setTimeout(() => {
-        if (confirm(`कार्ड ${res.card.card_code} डेटाबेस में सहेज लिया गया है। क्या आप इसे तुरंत रिकॉर्ड्स सूची में देखना चाहते हैं?`)) {
-          switchTab('records');
-        }
-      }, 500);
+      // One-click workflow: the same Save action both stores the invitation
+      // online and downloads the final PNG locally.
+      const cardNode = document.querySelector('#liveCardContainer .invitation-card');
+      if (!cardNode) throw new Error('कार्ड पूर्वावलोकन तैयार नहीं हो सका।');
+
+      const filename = `Sadaneera_Invitation_${(state.form.name || 'Card').replace(/[^a-zA-Z0-9_\u0900-\u097F-]+/g, '_')}.png`;
+      await CardRenderer.exportPNG(cardNode, filename);
+
+      showToast(`कार्ड ${res.card.card_code} वेबसाइट पर सुरक्षित हो गया और PNG डाउनलोड हो गया।`, 'success');
     } catch (err) {
       showToast(err.message || 'कार्ड सहेजने में विफल', 'error');
     } finally {
@@ -579,20 +570,28 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Direct PNG / PDF Download from Generator
-  document.getElementById('btnDownloadPng')?.addEventListener('click', () => {
+  document.getElementById('btnDownloadPng')?.addEventListener('click', async () => {
     const cardNode = document.querySelector('#liveCardContainer .invitation-card');
     if (!cardNode) return;
-    const filename = `Sadaneera_Invitation_${(state.form.name || 'Card').replace(/\s+/g, '_')}.png`;
-    CardRenderer.exportPNG(cardNode, filename);
-    showToast('निमंत्रण पत्र PNG डाउनलोड आरंभ हो गया है', 'success');
+    try {
+      const filename = `Sadaneera_Invitation_${(state.form.name || 'Card').replace(/[^a-zA-Z0-9_\u0900-\u097F-]+/g, '_')}.png`;
+      await CardRenderer.exportPNG(cardNode, filename);
+      showToast('निमंत्रण पत्र PNG डाउनलोड हो गया है', 'success');
+    } catch (err) {
+      showToast(err.message || 'PNG डाउनलोड नहीं हो सका', 'error');
+    }
   });
 
-  document.getElementById('btnDownloadPdf')?.addEventListener('click', () => {
+  document.getElementById('btnDownloadPdf')?.addEventListener('click', async () => {
     const cardNode = document.querySelector('#liveCardContainer .invitation-card');
     if (!cardNode) return;
-    const filename = `Sadaneera_Invitation_${(state.form.name || 'Card').replace(/\s+/g, '_')}.pdf`;
-    CardRenderer.exportPDF(cardNode, filename);
-    showToast('निमंत्रण पत्र PDF तैयार किया जा रहा है...', 'info');
+    try {
+      const filename = `Sadaneera_Invitation_${(state.form.name || 'Card').replace(/[^a-zA-Z0-9_\u0900-\u097F-]+/g, '_')}.pdf`;
+      await CardRenderer.exportPDF(cardNode, filename);
+      showToast('निमंत्रण पत्र PDF डाउनलोड हो गया है', 'success');
+    } catch (err) {
+      showToast(err.message || 'PDF डाउनलोड नहीं हो सका', 'error');
+    }
   });
 
   // Reset Generator Form
@@ -602,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.form.about = '';
     state.form.badge = 'विशिष्ट अतिथि';
     state.form.photoData = DEFAULT_AVATAR;
-    state.form.cardCode = 'SN-00001-XXXX';
+    state.form.cardCode = 'SN-0001-XXXX';
     inputGuestName.value = '';
     inputGuestAbout.value = '';
     if (inputGuestBadge) inputGuestBadge.value = 'विशिष्ट अतिथि';
@@ -620,14 +619,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.getElementById('recordsTableBody');
     if (!tbody) return;
 
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem;">लोड हो रहा है...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">लोड हो रहा है...</td></tr>`;
 
     try {
       const res = await API.getCards(state.recordsFilter);
       renderRecordsTable(res.cards || []);
       document.getElementById('totalRecordsBadge').textContent = `${res.total || 0} निमंत्रण कार्ड`;
     } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--danger); padding: 1.5rem;">त्रुटि: ${err.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger); padding: 1.5rem;">त्रुटि: ${err.message}</td></tr>`;
     }
   }
 
@@ -636,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!tbody) return;
 
     if (cards.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color: var(--text-muted);">कोई रिकॉर्ड उपलब्ध नहीं है। कृपया कार्ड जेनरेटर से नया निमंत्रण बनाएं।</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2.5rem; color: var(--text-muted);">कोई रिकॉर्ड उपलब्ध नहीं है। कृपया कार्ड जेनरेटर से नया निमंत्रण बनाएं।</td></tr>`;
       return;
     }
 
@@ -644,79 +643,60 @@ document.addEventListener('DOMContentLoaded', () => {
       const photoSrc = c.photo_url || DEFAULT_AVATAR;
       const shortHash = c.checksum ? `SN-${c.checksum.slice(0, 8).toUpperCase()}` : 'N/A';
       const createdDate = new Date(c.created_at).toLocaleDateString('hi-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
+        day: 'numeric', month: 'short', year: 'numeric'
       });
-
       const badgeLabel = c.guest_badge || 'विशिष्ट अतिथि';
+      const deleted = Number(c.is_deleted) === 1;
+      const deletedBy = c.deleted_by_name ? `डिलीट बाय: ${c.deleted_by_name}` : 'डिलीट बाय: मुख्य प्रशासन';
+
+      const actionButtons = deleted
+        ? `<div class="deleted-action-label"><strong>🗑️ डिलीटेड</strong><span>${deletedBy}</span></div>`
+        : `
+          <button class="action-btn" title="कार्ड पुनः उत्पन्न व डाउनलोड करें" onclick="window.regenerateCardModal(${c.id})">🔄 पुनः उत्पन्न करें</button>
+          <button class="action-btn" title="एडिट या डुप्लीकेट करें" onclick="window.duplicateCardToForm(${c.id})">✏️ डुप्लीकेट</button>
+          <button class="action-btn delete" title="डिलीट मार्क करें" onclick="window.deleteCardRecord(${c.id})">🗑️ हटाएं</button>
+        `;
 
       return `
-        <tr>
+        <tr class="${deleted ? 'record-deleted-row' : ''}" style="${deleted ? 'opacity:0.72;' : ''}">
           <td>
-            <span class="card-code-badge" title="5-अंक कार्ड संख्या + 4-अंक रैंडम">${c.card_code}</span>
+            <span class="card-code-badge ${deleted ? 'deleted' : 'active'}" title="पहले 4 अंक = कार्ड का स्थायी क्रमांक; डैश के बाद 4 अंक = unique random suffix">${c.card_code}</span>
           </td>
           <td>
             <div class="guest-cell-profile">
               <img src="${photoSrc}" alt="${c.guest_name}" class="guest-table-avatar" />
               <div class="guest-info-text">
                 <div class="name"><span class="title">${c.title}</span>${c.guest_name}</div>
-                <div style="font-size:0.75rem; color:var(--primary); font-weight:700;">[ ${badgeLabel} ]</div>
+                <div style="font-size:0.75rem;color:var(--primary);font-weight:700;">[ ${badgeLabel} ]</div>
                 <div class="about" title="${c.guest_about}">${c.guest_about}</div>
               </div>
             </div>
           </td>
+          <td><span style="font-size:0.8rem;font-weight:700;text-transform:capitalize;">${c.theme}</span></td>
+          <td><span title="${c.checksum}" style="font-family:monospace;font-size:0.75rem;color:var(--text-muted);">${shortHash}</span></td>
           <td>
-            <span style="font-size:0.8rem; font-weight:700; text-transform:capitalize;">${c.theme}</span>
+            <div style="font-size:0.85rem;font-weight:600;">${c.created_by_name}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">${createdDate}</div>
           </td>
-          <td>
-            <span title="${c.checksum}" style="font-family:monospace; font-size:0.75rem; color:var(--text-muted);">${shortHash}</span>
-          </td>
-          <td>
-            <div style="font-size:0.85rem; font-weight:600;">${c.created_by_name}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">${createdDate}</div>
-          </td>
-          <td>
-            <div class="action-btn-group">
-              <button class="action-btn" title="कार्ड पुनः उत्पन्न व डाउनलोड करें" onclick="window.regenerateCardModal(${c.id})">
-                🔄 पुनः उत्पन्न करें
-              </button>
-              <button class="action-btn" title="एडिट या डुप्लीकेट करें" onclick="window.duplicateCardToForm(${c.id})">
-                ✏️ डुप्लीकेट
-              </button>
-              <button class="action-btn delete" title="हटाएं" onclick="window.deleteCardRecord(${c.id})">
-                🗑️
-              </button>
-            </div>
-          </td>
+          <td><div class="action-btn-group">${actionButtons}</div></td>
         </tr>
       `;
     }).join('');
   }
 
-  // Live Search & Theme Filter on Records
-  document.getElementById('inputSearchRecords')?.addEventListener('input', (e) => {
-    state.recordsFilter.search = e.target.value;
-    loadRecords();
-  });
-
-  document.getElementById('selectFilterTheme')?.addEventListener('change', (e) => {
-    state.recordsFilter.theme = e.target.value;
-    loadRecords();
-  });
-
-  // Export CSV
-  document.getElementById('btnExportCsv')?.addEventListener('click', () => {
-    const token = API.getToken();
-    window.open(`/api/cards/export/csv?token=${token}`, '_blank');
-  });
-
-  // Crucial Feature: Regenerate Card Modal on the fly based on database record!
   window.regenerateCardModal = async function(cardId) {
     try {
       const res = await API.getCardById(cardId);
       const card = res.card;
       if (!card) return;
+      if (Number(card.is_deleted) === 1) {
+        showToast('यह कार्ड डिलीटेड है; एडिट/डुप्लीकेट लॉक है।', 'error');
+        return;
+      }
+      if (Number(card.is_deleted) === 1) {
+        showToast('यह कार्ड डिलीटेड है; पुनः उत्पन्न/डाउनलोड लॉक है।', 'error');
+        return;
+      }
 
       const s = res.masterSettings || state.masterSettings || {};
       const modalContainer = document.getElementById('regenerateCardContainer');
@@ -819,7 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Delete Card Record
   window.deleteCardRecord = async function(cardId) {
-    if (!confirm('क्या आप इस निमंत्रण कार्ड रिकॉर्ड को स्थायी रूप से हटाना चाहते हैं?')) return;
+    if (!confirm('यह कार्ड डिलीटेड मार्क होगा। रिकॉर्ड और अतिथि फोटो सुरक्षित रहेंगे तथा पुनः उत्पन्न/एडिट/डिलीट क्रियाएं लॉक हो जाएंगी। आगे बढ़ें?')) return;
 
     try {
       const res = await API.deleteCard(cardId);
@@ -934,55 +914,140 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Super Admin: production reset of all invitation records + uploaded guest photos.
+  document.getElementById('btnResetAllCards')?.addEventListener('click', async () => {
+    const password = document.getElementById('resetAllCardsPassword')?.value || '';
+    const phrase = document.getElementById('resetAllCardsPhrase')?.value.trim() || '';
+    if (!password || !phrase) {
+      showToast('Super Admin password और confirmation phrase दोनों आवश्यक हैं।', 'error');
+      return;
+    }
+    if (phrase !== 'DELETE ALL CARDS') {
+      showToast('Confirmation phrase सही नहीं है।', 'error');
+      return;
+    }
+    if (!confirm('अंतिम चेतावनी: सभी invitation records और uploads की files स्थायी रूप से हट जाएंगी। Users और master settings सुरक्षित रहेंगे। क्या आप जारी रखना चाहते हैं?')) return;
+
+    const btn = document.getElementById('btnResetAllCards');
+    btn.disabled = true;
+    btn.textContent = 'डेटा साफ किया जा रहा है...';
+    try {
+      const res = await API.resetAllCards(password, phrase);
+      showToast(res.message || 'सभी कार्ड डेटा साफ कर दिया गया।', 'success');
+      document.getElementById('resetAllCardsPassword').value = '';
+      document.getElementById('resetAllCardsPhrase').value = '';
+      await loadRecords();
+      await loadDashboard();
+    } catch (err) {
+      showToast(err.message || 'Reset असफल रहा।', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🗑️ सभी कार्ड डेटा साफ करें';
+    }
+  });
+
   // ==========================================================================
   // Dashboard Overview Metrics
   // ==========================================================================
+  function formatDashboardDate(value) {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleDateString('hi-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function renderShareChart(containerId, admins, percentageKey, countKey, emptyText) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const rows = (admins || []).filter(a => Number(a[countKey] || 0) > 0);
+    if (!rows.length) {
+      el.innerHTML = `<div class="share-chart-empty">${emptyText}</div>`;
+      return;
+    }
+    el.innerHTML = rows.map(a => {
+      const pct = Number(a[percentageKey] || 0);
+      const count = Number(a[countKey] || 0);
+      return `
+        <div class="share-row">
+          <div class="share-row-head">
+            <strong>${a.full_name}</strong>
+            <span>${count} कार्ड · ${pct.toFixed(1)}%</span>
+          </div>
+          <div class="share-track" aria-label="${a.full_name}: ${pct.toFixed(1)} प्रतिशत">
+            <div class="share-fill" style="width:${Math.min(100, Math.max(0, pct))}%"></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
   async function loadDashboard() {
     try {
       const res = await API.getDashboardStats();
-      const stats = res.stats;
+      const stats = res.stats || {};
 
       document.getElementById('statTotalCards').textContent = stats.totalCards || 0;
       document.getElementById('statTodayCards').textContent = stats.todayCards || 0;
       document.getElementById('statTotalAdmins').textContent = stats.totalAdmins || 0;
       document.getElementById('statMyCards').textContent = stats.myCards || 0;
 
-      // Recent Cards List
-      const recentList = document.getElementById('dashboardRecentCards');
-      if (recentList) {
-        if (!stats.recentCards || stats.recentCards.length === 0) {
-          recentList.innerHTML = `<p style="padding: 1.5rem; text-align: center; color: var(--text-muted);">कोई हालिया निमंत्रण नहीं मिला।</p>`;
+      const admins = stats.adminActivity || [];
+      const activityBody = document.getElementById('adminActivityTableBody');
+      if (activityBody) {
+        if (!admins.length) {
+          activityBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">अभी कोई एडमिन रिकॉर्ड उपलब्ध नहीं है।</td></tr>`;
         } else {
-          recentList.innerHTML = stats.recentCards.map(c => `
-            <div style="display:flex; align-items:center; justify-content:space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);">
-              <div style="display:flex; align-items:center; gap: 10px;">
-                <img src="${c.photo_url || DEFAULT_AVATAR}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--gold);" />
-                <div>
-                  <div style="font-weight:700; font-size:0.9rem;">${c.title} ${c.guest_name}</div>
-                  <div style="font-size:0.75rem; color:var(--text-muted);">${c.card_code} • ${c.created_by_name}</div>
-                </div>
-              </div>
-              <button class="action-btn" onclick="window.regenerateCardModal(${c.id})">पुनः देखें</button>
-            </div>
+          activityBody.innerHTML = admins.map(a => `
+            <tr>
+              <td>
+                <div style="font-weight:800;">${a.full_name}</div>
+                <div style="font-size:.72rem;color:var(--text-muted);">@${a.username}</div>
+              </td>
+              <td>${formatDashboardDate(a.admin_created_at)}</td>
+              <td><strong class="dashboard-number">${a.total_cards}</strong></td>
+              <td>${a.active_cards}</td>
+              <td>${a.deleted_actions}</td>
+              <td><strong>${a.today_cards}</strong></td>
+            </tr>
           `).join('');
         }
       }
 
-      // Super Admin Leaderboard
-      const leaderboardSection = document.getElementById('dashboardLeaderboardSection');
-      if (leaderboardSection) {
-        if (state.user?.role === 'superadmin' && stats.adminLeaderboard) {
-          leaderboardSection.style.display = 'block';
-          const tableBody = document.getElementById('leaderboardTableBody');
-          tableBody.innerHTML = stats.adminLeaderboard.map(a => `
-            <tr>
-              <td><strong>${a.full_name}</strong> (@${a.username})</td>
-              <td><span class="role-tag ${a.role}">${a.role}</span></td>
-              <td><strong style="color:var(--primary); font-size:1.1rem;">${a.total_cards}</strong></td>
-            </tr>
-          `).join('');
+      const lifetimeTotal = Number(stats.lifetimeTotal || 0);
+      const todayTotal = Number(stats.todayTotal || 0);
+      const lifetimeBadge = document.getElementById('dashboardLifetimeTotal');
+      const lifetimeChartTotal = document.getElementById('dashboardLifetimeChartTotal');
+      const todayChartTotal = document.getElementById('dashboardTodayChartTotal');
+      if (lifetimeBadge) lifetimeBadge.textContent = `${lifetimeTotal} कुल कार्ड`;
+      if (lifetimeChartTotal) lifetimeChartTotal.textContent = `${lifetimeTotal} कार्ड`;
+      if (todayChartTotal) todayChartTotal.textContent = `${todayTotal} कार्ड`;
+
+      renderShareChart('lifetimeShareChart', admins, 'lifetime_percentage', 'total_cards', 'अभी कोई lifetime card नहीं बना है।');
+      renderShareChart('todayShareChart', admins, 'today_percentage', 'today_cards', 'आज अभी कोई card नहीं बना है।');
+
+      // Recent activity is intentionally capped at 10.
+      const recentList = document.getElementById('dashboardRecentCards');
+      if (recentList) {
+        const recent = (stats.recentCards || []).slice(0, 10);
+        if (!recent.length) {
+          recentList.innerHTML = `<p style="padding:1.5rem;text-align:center;color:var(--text-muted);">कोई हालिया निमंत्रण नहीं मिला।</p>`;
         } else {
-          leaderboardSection.style.display = 'none';
+          recentList.innerHTML = recent.map(c => {
+            const deleted = Number(c.is_deleted) === 1;
+            const action = deleted
+              ? `<span class="table-status-pill inactive">🗑️ डिलीटेड — क्रियाएं लॉक</span>`
+              : `<button class="action-btn" onclick="window.regenerateCardModal(${c.id})">पुनः देखें</button>`;
+            return `
+              <div class="dashboard-recent-item ${deleted ? 'record-deleted-row' : ''}">
+                <div class="dashboard-recent-main">
+                  <img src="${c.photo_url || DEFAULT_AVATAR}" alt="${c.guest_name}" />
+                  <div>
+                    <div style="font-weight:800;font-size:.9rem;">${c.title} ${c.guest_name}</div>
+                    <div style="font-size:.74rem;color:var(--text-muted);">${c.card_code} · ${c.created_by_name} · ${formatDashboardDate(c.created_at)}</div>
+                  </div>
+                </div>
+                ${action}
+              </div>`;
+          }).join('');
         }
       }
     } catch (err) {

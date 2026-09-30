@@ -110,13 +110,36 @@ router.post('/', upload.single('photo'), (req, res) => {
       });
     }
 
-    // Serial Number Format: First 5 digits = card number, Next 4 digits = random digits
-    const countResult = db.prepare('SELECT COUNT(*) AS count FROM invitations').get();
-    const countNumber = countResult.count + 1;
-    const firstFiveDigits = countNumber.toString().padStart(5, '0'); // e.g. "00001"
-    const randomFourDigits = Math.floor(1000 + Math.random() * 9000).toString(); // e.g. "8492"
-    const cardSerial = `${firstFiveDigits}-${randomFourDigits}`; // e.g. "00001-8492"
-    const cardCode = `SN-${cardSerial}`;
+    // Permanent card numbering: the first 4 digits represent the lifetime card sequence; the suffix is a compact 4-digit unique code.
+    // This counter is independent of the number of rows, so deleted cards never cause reuse.
+    const nextNumber = db.transaction(() => {
+      const current = db.prepare('SELECT last_number FROM card_sequence WHERE id = 1').get().last_number;
+      if (current >= 9999) {
+        throw new Error('Maximum 4-digit card serial limit (9999) reached.');
+      }
+      const next = current + 1;
+      db.prepare('UPDATE card_sequence SET last_number = ? WHERE id = 1').run(next);
+      return next;
+    })();
+
+    const firstFourDigits = String(nextNumber).padStart(4, '0');
+
+    // The suffix is a cryptographically-random 4-digit value. It is checked against the DB
+    // before use, so an accidental collision is retried rather than producing a duplicate ID.
+    let suffix = '';
+    let cardSerial = '';
+    let cardCode = '';
+    for (let attempt = 0; attempt < 20; attempt++) {
+      suffix = String(crypto.randomInt(1000, 10000));
+      cardSerial = `${firstFourDigits}-${suffix}`;
+      cardCode = `SN-${cardSerial}`;
+      const exists = db.prepare('SELECT id FROM invitations WHERE card_code = ?').get(cardCode);
+      if (!exists) break;
+      suffix = '';
+    }
+    if (!suffix) {
+      throw new Error('Unable to allocate a unique card ID. Please try again.');
+    }
 
     // Compute cryptographic integrity checksum
     const checksum = calculateChecksum(
@@ -267,7 +290,8 @@ router.get('/:id', (req, res) => {
   }
 });
 
-// DELETE /api/cards/:id - Delete an invitation record
+// DELETE /api/cards/:id - Soft-delete an invitation record.
+// The record and guest photo are deliberately retained for audit/misuse traceability.
 router.delete('/:id', (req, res) => {
   try {
     const cardId = req.params.id;
@@ -277,7 +301,10 @@ router.delete('/:id', (req, res) => {
       return res.status(404).json({ success: false, message: 'Invitation record not found.' });
     }
 
-    // Role check: Only Super Admin or the creator admin can delete
+    if (card.is_deleted === 1) {
+      return res.status(400).json({ success: false, message: 'यह कार्ड पहले ही डिलीट मार्क किया जा चुका है।' });
+    }
+
     if (req.user.role !== 'superadmin' && card.created_by_id !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -285,21 +312,20 @@ router.delete('/:id', (req, res) => {
       });
     }
 
-    // Delete photo file from disk if present
-    if (card.photo_url) {
-      const filename = path.basename(card.photo_url);
-      const filePath = path.join(uploadDir, filename);
-      if (fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath); } catch (e) {}
-      }
-    }
+    db.prepare(`
+      UPDATE invitations
+      SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP,
+          deleted_by_id = ?, deleted_by_name = ?, deleted_by_username = ?
+      WHERE id = ?
+    `).run(req.user.id, req.user.full_name, req.user.username, cardId);
 
-    db.prepare('DELETE FROM invitations WHERE id = ?').run(cardId);
-
-    res.json({ success: true, message: `Invitation ${card.card_code} deleted successfully.` });
+    res.json({
+      success: true,
+      message: `Invitation ${card.card_code} को डिलीट मार्क कर दिया गया है। रिकॉर्ड और फोटो सुरक्षित रखे गए हैं।`
+    });
   } catch (err) {
-    console.error('Delete card error:', err);
-    res.status(500).json({ success: false, message: 'Failed to delete invitation record.' });
+    console.error('Soft delete card error:', err);
+    res.status(500).json({ success: false, message: 'Failed to mark invitation as deleted.' });
   }
 });
 

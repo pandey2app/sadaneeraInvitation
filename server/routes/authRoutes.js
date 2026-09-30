@@ -61,32 +61,5 @@ router.get('/me', authenticateToken, (req, res) => {
   });
 });
 
-// POST /api/auth/change-password
-router.post('/change-password', authenticateToken, (req, res) => {
-  try {
-    const { current_password, new_password } = req.body;
-    if (!current_password || !new_password) {
-      return res.status(400).json({ success: false, message: 'Current and new password are required.' });
-    }
-
-    if (new_password.length < 6) {
-      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters long.' });
-    }
-
-    const user = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.user.id);
-    const match = bcrypt.compareSync(current_password, user.password_hash);
-    if (!match) {
-      return res.status(400).json({ success: false, message: 'Current password does not match.' });
-    }
-
-    const newHash = bcrypt.hashSync(new_password, 10);
-    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, req.user.id);
-
-    res.json({ success: true, message: 'Password updated successfully.' });
-  } catch (err) {
-    console.error('Password change error:', err);
-    res.status(500).json({ success: false, message: 'Failed to update password.' });
-  }
-});
 
 module.exports = router;

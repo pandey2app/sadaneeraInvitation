@@ -6,11 +6,13 @@ const bcrypt = require('bcryptjs');
 const dbPath = path.join(__dirname, '..', 'sadaneera.sqlite');
 const db = new Database(dbPath);
 
-// Enable WAL mode for better concurrency and performance
 db.pragma('journal_mode = WAL');
 
+function addColumnIfMissing(table, definition) {
+  try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${definition}`); } catch (e) {}
+}
+
 function initDb() {
-  // Ensure tables exist
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,13 +60,34 @@ function initDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (created_by_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS card_sequence (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      last_number INTEGER NOT NULL DEFAULT 0
+    );
   `);
 
-  // Migrate any missing columns if table already existed
-  try { db.exec("ALTER TABLE invitations ADD COLUMN guest_badge TEXT DEFAULT 'विशिष्ट अतिथि'"); } catch(e) {}
-  try { db.exec("ALTER TABLE invitations ADD COLUMN card_serial TEXT"); } catch(e) {}
+  addColumnIfMissing('invitations', "guest_badge TEXT DEFAULT 'विशिष्ट अतिथि'");
+  addColumnIfMissing('invitations', 'card_serial TEXT');
+  addColumnIfMissing('invitations', 'is_deleted INTEGER NOT NULL DEFAULT 0');
+  addColumnIfMissing('invitations', 'deleted_at DATETIME');
+  addColumnIfMissing('invitations', 'deleted_by_id INTEGER');
+  addColumnIfMissing('invitations', 'deleted_by_name TEXT');
+  addColumnIfMissing('invitations', 'deleted_by_username TEXT');
 
-  // Seed default master card content settings
+  // Ensure the permanent card counter starts after the highest serial ever created.
+  // It is deliberately independent of COUNT(*), so deleting cards never reuses numbers.
+  const existingSequence = db.prepare('SELECT id FROM card_sequence WHERE id = 1').get();
+  if (!existingSequence) {
+    let maxNumber = 0;
+    const rows = db.prepare('SELECT card_serial FROM invitations WHERE card_serial IS NOT NULL').all();
+    for (const row of rows) {
+      const match = String(row.card_serial || '').match(/^(\d{1,})-/);
+      if (match) maxNumber = Math.max(maxNumber, parseInt(match[1], 10) || 0);
+    }
+    db.prepare('INSERT INTO card_sequence (id, last_number) VALUES (1, ?)').run(maxNumber);
+  }
+
   const settings = db.prepare('SELECT * FROM event_settings WHERE id = 1').get();
   if (!settings) {
     db.prepare(`
@@ -72,9 +95,9 @@ function initDb() {
         id, program_name, program_subtitle, invocation,
         event_date, event_time, event_venue, invitation_message, organizer_name, updated_by
       ) VALUES (
-        1, 
-        'सदानीरा महोत्सव 2026', 
-        'सांस्कृतिक, साहित्यिक एवं कला महासमागम', 
+        1,
+        'सदानीरा महोत्सव 2026',
+        'सांस्कृतिक, साहित्यिक एवं कला महासमागम',
         '॥ सदानीरा जीवनदायिनी संस्कृतिधारा ॥',
         '15-17 नवंबर 2026',
         'सायं 5:00 बजे से',
@@ -84,28 +107,26 @@ function initDb() {
         'superadmin'
       )
     `).run();
-    console.log('✓ Master Card Content Settings initialized.');
   }
 
-  // Seed default superadmin if not exists
   const superAdmin = db.prepare('SELECT * FROM users WHERE role = ?').get('superadmin');
   if (!superAdmin) {
-    const defaultSuperPass = 'Admin@Sadaneera2026';
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(defaultSuperPass, salt);
+    const username = (process.env.SUPERADMIN_USERNAME || '').trim().toLowerCase();
+    const password = process.env.SUPERADMIN_PASSWORD || '';
+    const fullName = (process.env.SUPERADMIN_NAME || 'मुख्य प्रशासक (Super Admin)').trim();
+    const email = (process.env.SUPERADMIN_EMAIL || '').trim() || null;
 
-    const insert = db.prepare(`
-      INSERT INTO users (username, password_hash, full_name, email, role, is_active)
-      VALUES (?, ?, ?, ?, ?, 1)
-    `);
-    insert.run('superadmin', hash, 'मुख्य प्रशासक (Super Admin)', 'superadmin@sadaneera.org', 'superadmin');
-    console.log('✓ Default Super Admin created: [username: superadmin / password: Admin@Sadaneera2026]');
-
-    // Also seed a default sample admin for easy demonstration
-    const adminPass = 'Admin@123';
-    const adminHash = bcrypt.hashSync(adminPass, salt);
-    insert.run('admin_user', adminHash, 'आलोक कुमार (Sub Admin)', 'admin@sadaneera.org', 'admin');
-    console.log('✓ Default Admin created: [username: admin_user / password: Admin@123]');
+    if (username && password.length >= 8) {
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(password, salt);
+      db.prepare(`
+        INSERT INTO users (username, password_hash, full_name, email, role, is_active)
+        VALUES (?, ?, ?, ?, 'superadmin', 1)
+      `).run(username, hash, fullName, email);
+      console.log(`✓ Production Super Admin created: ${username}`);
+    } else {
+      console.warn('⚠ No Super Admin exists. Set SUPERADMIN_USERNAME and SUPERADMIN_PASSWORD (8+ chars) before first production start.');
+    }
   }
 }
 

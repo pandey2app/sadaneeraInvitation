@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
 const db = require('../db');
 const { authenticateToken, requireSuperAdmin } = require('../auth');
 
@@ -135,12 +137,68 @@ router.delete('/:id', (req, res) => {
       return res.status(403).json({ success: false, message: 'Primary system superadmin cannot be deleted.' });
     }
 
+    // Never cascade-delete invitation history when an admin account is removed.
+    // Accounts with invitation records must be deactivated instead so accountability remains intact.
+    const cardCount = db.prepare('SELECT COUNT(*) AS count FROM invitations WHERE created_by_id = ?').get(targetId).count;
+    if (cardCount > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `इस Admin के ${cardCount} invitation records मौजूद हैं। Audit history सुरक्षित रखने के लिए इस account को delete नहीं किया जा सकता; इसे Deactivate करें।`
+      });
+    }
+
     db.prepare('DELETE FROM users WHERE id = ?').run(targetId);
 
     res.json({ success: true, message: `Admin "${user.username}" deleted successfully.` });
   } catch (err) {
     console.error('Delete admin error:', err);
     res.status(500).json({ success: false, message: 'Failed to delete admin.' });
+  }
+});
+
+
+// POST /api/admins/reset-cards - Super Admin only, password + phrase required.
+// Clears invitation data and every file in uploads/, while preserving users and master settings.
+router.post('/reset-cards', (req, res) => {
+  try {
+    const { password, confirmation } = req.body || {};
+    if (!password || confirmation !== 'DELETE ALL CARDS') {
+      return res.status(400).json({ success: false, message: 'Super Admin password और exact confirmation phrase आवश्यक हैं.' });
+    }
+
+    const user = db.prepare("SELECT password_hash FROM users WHERE id = ? AND role = 'superadmin' AND is_active = 1").get(req.user.id);
+    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+      return res.status(401).json({ success: false, message: 'Super Admin password गलत है.' });
+    }
+
+    const uploadDir = path.join(__dirname, '..', '..', 'uploads');
+    const clearAll = db.transaction(() => {
+      db.prepare('DELETE FROM invitations').run();
+      db.prepare("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'invitations'").run();
+      db.prepare('UPDATE card_sequence SET last_number = 0 WHERE id = 1').run();
+    });
+    clearAll();
+
+    let deletedFiles = 0;
+    if (fs.existsSync(uploadDir)) {
+      for (const entry of fs.readdirSync(uploadDir, { withFileTypes: true })) {
+        const target = path.join(uploadDir, entry.name);
+        try {
+          if (entry.isDirectory()) fs.rmSync(target, { recursive: true, force: true });
+          else fs.unlinkSync(target);
+          deletedFiles++;
+        } catch (e) {
+          console.warn('Could not delete upload during reset:', target, e.message);
+        }
+      }
+    } else {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    res.json({ success: true, message: `सभी invitation records और ${deletedFiles} upload files साफ कर दी गई हैं। Users और master settings सुरक्षित हैं।` });
+  } catch (err) {
+    console.error('Reset all cards error:', err);
+    res.status(500).json({ success: false, message: 'सभी कार्ड डेटा साफ नहीं किया जा सका।' });
   }
 });
 

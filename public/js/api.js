@@ -85,16 +85,6 @@ const API = {
     return this.request('/api/auth/me');
   },
 
-  async changePassword(currentPassword, newPassword) {
-    return this.request('/api/auth/change-password', {
-      method: 'POST',
-      body: JSON.stringify({
-        current_password: currentPassword,
-        new_password: newPassword
-      })
-    });
-  },
-
   // Admin Management Endpoints (Super Admin Only)
   async getAdmins() {
     return this.request('/api/admins');
@@ -116,6 +106,13 @@ const API = {
   async deleteAdmin(id) {
     return this.request(`/api/admins/${id}`, {
       method: 'DELETE'
+    });
+  },
+
+  async resetAllCards(password, confirmation) {
+    return this.request('/api/admins/reset-cards', {
+      method: 'POST',
+      body: JSON.stringify({ password, confirmation })
     });
   },
 

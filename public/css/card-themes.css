@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    सदानीरा महोत्सव (SADANEERA MAHOTSAV) - PORTRAIT INVITATION CARD THEMES
    All Themes in Majestic Portrait Mode with Large Guest Photo Frame
    ========================================================================== */
@@ -324,6 +324,37 @@
   border: 1px solid rgba(197, 155, 39, 0.35);
 }
 
+/* Records table: keep status inside the existing Actions column. */
+.card-code-badge.active {
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: rgba(34, 139, 82, 0.28);
+}
+
+.card-code-badge.deleted {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: rgba(190, 55, 55, 0.28);
+}
+
+.deleted-action-label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  line-height: 1.2;
+}
+
+.deleted-action-label strong {
+  color: var(--danger);
+  font-size: 0.78rem;
+}
+
+.deleted-action-label span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
 /* ==========================================================================
    THEME 1: शाही स्वर्ण एवं रोली (Royal Saffron & Gold - Default)
    ========================================================================== */
@@ -547,4 +578,734 @@
     margin: 0 !important;
     border-radius: 0 !important;
   }
+}
+
+
+
+
+/* ==========================================================================
+   SADANEERA MAHOTSAV 2026 — DESIGN CORRECTIONS
+   Keep the original event/footer panel layout; refine only requested details.
+   ========================================================================== */
+
+/* Existing foundation/presentation line comes from Master Settings invocation.
+   Do not render a second hard-coded line. */
+
+/* Logo: larger, centered between the existing presentation line and title. */
+.sadaneera-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto 2px;
+}
+
+.sadaneera-logo {
+  display: block;
+  width: 122px;
+  height: 122px;
+  object-fit: contain;
+}
+
+/* Main title / subtitle */
+.invitation-card .card-main-title {
+  font-size: 3.15rem;
+  line-height: 1.08;
+  letter-spacing: 1.8px;
+  margin: 1px 0 0;
+}
+
+.invitation-card .card-subtitle {
+  font-size: 1.18rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* Keep Om/divider and photo closer together. */
+.invitation-card .card-divider {
+  margin: 7px auto 2px;
+}
+
+.invitation-card .card-body-section {
+  margin-top: 2px;
+}
+
+/* Larger guest photo */
+.invitation-card .guest-photo-container {
+  margin-bottom: 15px;
+}
+
+.invitation-card .guest-photo-frame {
+  width: 255px;
+  height: 255px;
+}
+
+/* Sप्रेम निमंत्रण */
+.invitation-card .guest-honor-badge {
+  font-size: 1.08rem;
+  font-weight: 800;
+  padding: 6px 28px;
+  bottom: -12px;
+}
+
+/* Guest name / designation */
+.invitation-card .guest-full-name {
+  font-size: 2.4rem;
+  line-height: 1.16;
+}
+
+.invitation-card .guest-about-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 7px;
+}
+
+/* Existing invitation line: only strengthen it. */
+.invitation-card .guest-cordial-note {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+/* RESTORE ORIGINAL EVENT PANEL LAYOUT: icon on left, text beside it. */
+.invitation-card .card-event-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  transform: none;
+}
+
+.invitation-card .event-detail-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  text-align: left;
+}
+
+.invitation-card .event-detail-item > div {
+  text-align: left;
+}
+
+.invitation-card .event-detail-item .value {
+  text-align: left;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.invitation-card .event-detail-item .icon {
+  flex: 0 0 auto;
+}
+
+/* Venue: first part on one line, remaining location below. */
+.invitation-card .venue-value {
+  text-align: left;
+}
+
+/* RESTORE ORIGINAL FOOTER PANEL LAYOUT. */
+.invitation-card .card-footer-section {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 4px 6px 0;
+  margin-top: 0;
+}
+
+/* Only center the organizer text inside its own left-side block. */
+.invitation-card .rsvp-block {
+  width: auto;
+  text-align: center;
+}
+
+.invitation-card .rsvp-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.invitation-card .rsvp-name {
+  font-size: 1.08rem;
+  font-weight: 800;
+  margin-top: 2px;
+  text-align: center;
+}
+
+.invitation-card .card-security-block {
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .invitation-card .sadaneera-logo {
+    width: 116px;
+    height: 116px;
+  }
+
+  .invitation-card .guest-photo-frame {
+    width: 245px;
+    height: 245px;
+  }
+}
+
+
+/* ==========================================================================
+   SADANEERA 2026 — FINAL VISUAL REFINEMENT
+   ========================================================================== */
+
+/* ===== FINAL VISUAL REFINEMENTS ===== */
+
+/* Keep the single line supplied by Master Settings; do not create a second one. */
+.invitation-card .card-presentation-line {
+  font-size: 1.52rem;
+  line-height: 1.25;
+  font-weight: 900;
+  text-align: center;
+  color: #8a5a10;
+  margin: 2px auto 4px;
+  letter-spacing: .45px;
+}
+
+/* Larger logo, still balanced with the title. */
+.invitation-card .sadaneera-logo-wrap {
+  margin: -2px auto 0;
+}
+
+.invitation-card .sadaneera-logo {
+  width: 168px;
+  height: 168px;
+  object-fit: contain;
+}
+
+/* Lit-festival line: bold handwritten/cursive display treatment. */
+.invitation-card .lit-festival-line {
+  margin: 1px auto 2px;
+  text-align: center;
+  font-family: 'Kalam', 'Tiro Devanagari Hindi', cursive;
+  font-size: 1.28rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #8a1f2d;
+  text-rendering: geometricPrecision;
+}
+
+.invitation-card .lit-festival-line .lit-latin {
+  font-family: 'Kalam', cursive;
+  font-weight: 700;
+  letter-spacing: .35px;
+}
+
+/* Bring the photo closer to the Om divider without changing its current size. */
+.invitation-card .card-divider {
+  margin-bottom: -3px;
+}
+
+.invitation-card .card-body-section {
+  margin-top: -3px;
+}
+
+/* Preserve the current photo size/position. */
+.invitation-card .guest-photo-frame {
+  width: 268px;
+  height: 268px;
+}
+
+/* Letter rain spans the whole left/right area around the portrait, never over it. */
+.invitation-card .guest-photo-stage {
+  position: relative;
+  width: 100%;
+  min-height: 275px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+.invitation-card .guest-photo-container {
+  position: relative;
+  z-index: 3;
+  margin-bottom: 12px;
+}
+
+.invitation-card .letter-rain {
+  position: absolute;
+  top: 0;
+  width: 220px;
+  height: 270px;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: .145;
+  color: #6e5524;
+  font-family: 'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Noto Sans', serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.invitation-card .letter-rain-left { left: 0; }
+.invitation-card .letter-rain-right { right: 0; }
+
+.invitation-card .letter-rain span {
+  position: absolute;
+  display: block;
+  transform: rotate(var(--r, 0deg));
+}
+
+/* Left field */
+.letter-rain-left span:nth-child(1){left:10px;top:10px;--r:-12deg}
+.letter-rain-left span:nth-child(2){left:56px;top:34px;--r:14deg}
+.letter-rain-left span:nth-child(3){left:118px;top:18px;--r:8deg}
+.letter-rain-left span:nth-child(4){left:174px;top:48px;--r:-16deg}
+.letter-rain-left span:nth-child(5){left:25px;top:76px;--r:11deg}
+.letter-rain-left span:nth-child(6){left:82px;top:96px;--r:-8deg}
+.letter-rain-left span:nth-child(7){left:152px;top:88px;--r:16deg}
+.letter-rain-left span:nth-child(8){left:198px;top:118px;--r:-10deg}
+.letter-rain-left span:nth-child(9){left:8px;top:145px;--r:12deg}
+.letter-rain-left span:nth-child(10){left:62px;top:166px;--r:-5deg}
+.letter-rain-left span:nth-child(11){left:132px;top:150px;--r:9deg}
+.letter-rain-left span:nth-child(12){left:186px;top:184px;--r:-15deg}
+.letter-rain-left span:nth-child(13){left:35px;top:210px;--r:10deg}
+.letter-rain-left span:nth-child(14){left:92px;top:232px;--r:-11deg}
+.letter-rain-left span:nth-child(15){left:158px;top:218px;--r:14deg}
+.letter-rain-left span:nth-child(16){left:205px;top:248px;--r:-7deg}
+.letter-rain-left span:nth-child(17){left:118px;top:128px;--r:12deg}
+.letter-rain-left span:nth-child(18){left:18px;top:238px;--r:-13deg}
+
+/* Right field */
+.letter-rain-right span:nth-child(1){left:18px;top:16px;--r:10deg}
+.letter-rain-right span:nth-child(2){left:74px;top:42px;--r:-14deg}
+.letter-rain-right span:nth-child(3){left:138px;top:22px;--r:12deg}
+.letter-rain-right span:nth-child(4){left:190px;top:54px;--r:-8deg}
+.letter-rain-right span:nth-child(5){left:34px;top:82px;--r:15deg}
+.letter-rain-right span:nth-child(6){left:92px;top:104px;--r:-12deg}
+.letter-rain-right span:nth-child(7){left:154px;top:92px;--r:8deg}
+.letter-rain-right span:nth-child(8){left:202px;top:126px;--r:-15deg}
+.letter-rain-right span:nth-child(9){left:12px;top:150px;--r:11deg}
+.letter-rain-right span:nth-child(10){left:68px;top:174px;--r:-6deg}
+.letter-rain-right span:nth-child(11){left:132px;top:158px;--r:14deg}
+.letter-rain-right span:nth-child(12){left:190px;top:192px;--r:-10deg}
+.letter-rain-right span:nth-child(13){left:28px;top:214px;--r:9deg}
+.letter-rain-right span:nth-child(14){left:88px;top:238px;--r:-13deg}
+.letter-rain-right span:nth-child(15){left:150px;top:224px;--r:10deg}
+.letter-rain-right span:nth-child(16){left:202px;top:252px;--r:-8deg}
+.letter-rain-right span:nth-child(17){left:112px;top:132px;--r:12deg}
+.letter-rain-right span:nth-child(18){left:20px;top:246px;--r:-11deg}
+
+/* Event panel: three equal boxes. Each box keeps icon on the left and
+   its heading/value left-aligned inside the same content block. */
+.invitation-card .card-event-section {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+
+.invitation-card .event-detail-item,
+.invitation-card .event-detail-item:nth-child(1),
+.invitation-card .event-detail-item:nth-child(2),
+.invitation-card .event-detail-item:nth-child(3) {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.invitation-card .event-detail-item .icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.invitation-card .event-detail-item > div,
+.invitation-card .event-detail-item:nth-child(1) > div,
+.invitation-card .event-detail-item:nth-child(2) > div,
+.invitation-card .event-detail-item:nth-child(3) > div {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left !important;
+}
+
+.invitation-card .event-detail-item .label,
+.invitation-card .event-detail-item .value,
+.invitation-card .event-detail-item:nth-child(1) .value,
+.invitation-card .event-detail-item:nth-child(2) .value,
+.invitation-card .event-detail-item:nth-child(3) .value {
+  text-align: left !important;
+}
+
+.invitation-card .event-detail-item .label {
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.invitation-card .event-detail-item .value {
+  font-size: .84rem;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .invitation-card .sadaneera-logo {
+    width: 148px;
+    height: 148px;
+  }
+
+  .invitation-card .card-presentation-line {
+    font-size: 1.20rem;
+  }
+
+  .invitation-card .lit-festival-line {
+    font-size: 1.08rem;
+  }
+
+  .invitation-card .card-event-section {
+    gap: 6px;
+  }
+
+  .invitation-card .event-detail-item {
+    gap: 5px;
+  }
+
+  .invitation-card .event-detail-item .label {
+    font-size: .64rem;
+  }
+
+  .invitation-card .event-detail-item .value {
+    font-size: .72rem;
+  }
+
+  .invitation-card .guest-photo-frame {
+    width: 245px;
+    height: 245px;
+  }
+
+  .invitation-card .letter-rain {
+    width: 150px;
+    height: 245px;
+    font-size: 18px;
+  }
+
+  .invitation-card .letter-rain-left { left: 0; }
+  .invitation-card .letter-rain-right { right: 0; }
+}
+
+
+/* ========================================================================
+   FINAL EVENT PANEL + LIT FESTIVAL REFINEMENT
+   ======================================================================== */
+
+/* Existing Master Settings presentation line: make it more noticeable. */
+.invitation-card .card-presentation-line {
+  font-size: 1.68rem;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: .55px;
+}
+
+/* Lit Festival: deep peacock-neck inspired accent. */
+.invitation-card .lit-festival-line,
+.invitation-card .lit-festival-line .lit-latin {
+  color: #075f68;
+}
+
+.invitation-card .lit-festival-line {
+  font-weight: 800;
+}
+
+.invitation-card .lit-festival-line .lit-latin {
+  font-weight: 800;
+}
+
+/* ------------------------------------------------------------------------
+   Event information panel — redesigned as three equal, elegant blocks.
+   Icon stays on the left; heading + value stay together and left aligned.
+   ------------------------------------------------------------------------ */
+.invitation-card .card-event-section {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin: 2px 0 10px;
+  padding: 0;
+  align-items: stretch;
+}
+
+.invitation-card .event-detail-item,
+.invitation-card .event-detail-item:nth-child(1),
+.invitation-card .event-detail-item:nth-child(2),
+.invitation-card .event-detail-item:nth-child(3) {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  min-width: 0;
+  width: 100%;
+  min-height: 72px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  text-align: left;
+  background: rgba(255, 252, 241, .78);
+  border: 1.5px solid rgba(197, 155, 39, .62);
+  border-radius: 10px;
+  box-shadow: 0 3px 9px rgba(44, 26, 14, .08);
+}
+
+/* Small gold/peacock accent at the left edge of each block. */
+.invitation-card .event-detail-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 3px;
+  background: #075f68;
+}
+
+.invitation-card .event-detail-item .icon {
+  flex: 0 0 29px;
+  width: 29px;
+  height: 29px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border-radius: 50%;
+  background: rgba(7, 95, 104, .10);
+  font-size: 1.02rem;
+  line-height: 1;
+}
+
+.invitation-card .event-detail-item > div,
+.invitation-card .event-detail-item:nth-child(1) > div,
+.invitation-card .event-detail-item:nth-child(2) > div,
+.invitation-card .event-detail-item:nth-child(3) > div {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left !important;
+}
+
+/* All three headings: clearly visible and consistent. */
+.invitation-card .event-detail-item .label,
+.invitation-card .event-detail-item:nth-child(1) .label,
+.invitation-card .event-detail-item:nth-child(2) .label,
+.invitation-card .event-detail-item:nth-child(3) .label {
+  display: block;
+  margin: 0 0 3px;
+  text-align: left !important;
+  font-size: .78rem;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: #6b4a10;
+  white-space: nowrap;
+}
+
+/* All three values: larger, bold and noticeable. */
+.invitation-card .event-detail-item .value,
+.invitation-card .event-detail-item:nth-child(1) .value,
+.invitation-card .event-detail-item:nth-child(2) .value,
+.invitation-card .event-detail-item:nth-child(3) .value {
+  display: block;
+  text-align: left !important;
+  font-size: .94rem;
+  line-height: 1.28;
+  font-weight: 850;
+  color: #2c1a0e;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Venue's second line remains neatly stacked. */
+.invitation-card .venue-value {
+  text-align: left !important;
+}
+
+@media (max-width: 600px) {
+  .invitation-card .card-presentation-line {
+    font-size: 1.30rem;
+  }
+
+  .invitation-card .card-event-section {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .invitation-card .event-detail-item,
+  .invitation-card .event-detail-item:nth-child(1),
+  .invitation-card .event-detail-item:nth-child(2),
+  .invitation-card .event-detail-item:nth-child(3) {
+    min-height: 62px;
+    gap: 5px;
+    padding: 8px 6px 8px 8px;
+    border-radius: 8px;
+  }
+
+  .invitation-card .event-detail-item .icon {
+    flex-basis: 23px;
+    width: 23px;
+    height: 23px;
+    font-size: .82rem;
+  }
+
+  .invitation-card .event-detail-item .label {
+    font-size: .62rem;
+  }
+
+  .invitation-card .event-detail-item .value {
+    font-size: .72rem;
+  }
+
+  .invitation-card .lit-festival-line {
+    font-size: 1.08rem;
+  }
+}
+
+/* ========================================================================
+   FINAL TYPOGRAPHY POLISH
+   ======================================================================== */
+
+/* Existing Master Settings presentation line — only enlarge/bolden it. */
+.invitation-card .card-presentation-line {
+  font-size: 1.82rem !important;
+  line-height: 1.22;
+  font-weight: 900 !important;
+  letter-spacing: .65px;
+}
+
+/* Make the Latin part of "Lit festival" carry the same visual weight as
+   the Devanagari text, while keeping the handwritten/cursive character. */
+.invitation-card .lit-festival-line {
+  font-family: 'Kalam', cursive !important;
+  font-weight: 700 !important;
+  -webkit-text-stroke: .28px currentColor;
+  text-shadow: 0 0 .18px currentColor;
+}
+
+.invitation-card .lit-festival-line .lit-latin {
+  font-family: 'Kalam', cursive !important;
+  font-weight: 700 !important;
+  -webkit-text-stroke: .34px currentColor;
+  text-shadow: 0 0 .2px currentColor;
+}
+
+@media (max-width: 600px) {
+  .invitation-card .card-presentation-line {
+    font-size: 1.46rem !important;
+  }
+
+  .invitation-card .lit-festival-line {
+    font-size: 1.10rem !important;
+  }
+}
+/*
+   FINAL CONTACT PANEL REFINEMENT — COMPACT SINGLE-LINE NUMBERS
+   ======================================================================== */
+
+.invitation-card .card-footer-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 1.45fr) minmax(0, 1fr);
+  align-items: end;
+  column-gap: 10px;
+  padding: 4px 6px 0;
+}
+
+.invitation-card .rsvp-block {
+  justify-self: start;
+  text-align: center;
+}
+
+.invitation-card .contact-block {
+  justify-self: center;
+  width: min(100%, 360px);
+  padding: 1px 4px 0;
+  text-align: center;
+  color: #4f463a;
+}
+
+.invitation-card .contact-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 4px;
+  color: #80600d;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.15px;
+  line-height: 1.1;
+}
+
+.invitation-card .contact-channel-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.invitation-card .contact-channel-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+  fill: currentColor;
+}
+
+.invitation-card .phone-channel-icon { color: #315f66; }
+.invitation-card .whatsapp-channel-icon { color: #27834d; }
+
+.invitation-card .contact-row-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.invitation-card .contact-item {
+  display: inline-block;
+  flex: 0 0 auto;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.05px;
+  white-space: nowrap;
+}
+
+.invitation-card .card-security-block {
+  justify-self: end;
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .invitation-card .card-footer-section { grid-template-columns: 1fr 1fr; row-gap: 6px; }
+  .invitation-card .contact-block {
+    grid-column: 1 / -1; grid-row: 2; justify-self: center; width: min(100%, 360px);
+  }
+  .invitation-card .rsvp-block { grid-column: 1; grid-row: 1; }
+  .invitation-card .card-security-block { grid-column: 2; grid-row: 1; }
+  .invitation-card .contact-row-all { gap: 5px; }
+  .invitation-card .contact-title { font-size: 0.94rem; }
+  .invitation-card .contact-item { font-size: 0.62rem; }
+}
+
+@media (max-width: 430px) {
+  .invitation-card .contact-block { width: 100%; padding-left: 0; padding-right: 0; }
+  .invitation-card .contact-row-all { gap: 3px; }
+  .invitation-card .contact-title { font-size: 0.86rem; }
+  .invitation-card .contact-item { font-size: 0.56rem; letter-spacing: 0; }
 }

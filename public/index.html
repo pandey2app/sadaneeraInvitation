@@ -8,7 +8,7 @@
   <!-- Google Fonts: Devanagari & Latin -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Outfit:wght@300;400;500;600;700;800&family=Rozha+One&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Cinzel+Decorative:wght@700;900&family=Outfit:wght@300;400;500;600;700;800&family=Roboto+Slab:wght@400;500;600;700;800&family=Rozha+One&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
 
   <!-- Vendor CSS -->
   <link rel="stylesheet" href="/vendor/cropper.min.css">
@@ -25,7 +25,7 @@
   <header class="site-header">
     <div class="header-container">
       <div class="brand-section">
-        <div class="brand-emblem" title="सदानीरा प्रतीक">🌸</div>
+        <div class="brand-emblem brand-logo-wrap" title="सदानीरा महोत्सव"><img src="/assets/Sadanira-logo.png" alt="सदानीरा महोत्सव" class="brand-logo" /></div>
         <div class="brand-titles">
           <h1>सदानीरा महोत्सव 2026</h1>
           <p>डिजिटल निमंत्रण पत्र निर्माण एवं प्रबंधन पोर्टल</p>
@@ -102,32 +102,76 @@
         </div>
       </div>
 
-      <!-- Recent Activity & Leaderboard -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;" class="dashboard-splits">
-        <div class="form-panel" style="padding: 1.25rem;">
-          <h3 style="font-family:'Rozha One', serif; color:var(--primary); margin-bottom: 0.75rem; font-size:1.15rem;">
-            🕒 हाल में बनाए गए निमंत्रण (Recent Activity)
-          </h3>
-          <div id="dashboardRecentCards"></div>
+      <!-- Recent Activity -->
+      <div class="dashboard-section-heading">
+        <div>
+          <h2>📈 एडमिन कार्य-प्रदर्शन</h2>
+          <p>सभी लॉगिन किए हुए प्रशासकों के lifetime और आज के invitation work का लेखा-जोखा।</p>
         </div>
+      </div>
 
-        <div class="form-panel" id="dashboardLeaderboardSection" style="padding: 1.25rem; display:none;">
-          <h3 style="font-family:'Rozha One', serif; color:var(--gold-dark); margin-bottom: 0.75rem; font-size:1.15rem;">
-            🏆 प्रशासक योगदान तालिका (Admin Leaderboard)
-          </h3>
+      <div class="admin-performance-grid">
+        <div class="form-panel dashboard-panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h3>👥 सभी एडमिन्स का कार्य विवरण</h3>
+              <p>बनाए गए, सक्रिय और डिलीट किए गए कार्ड्स सहित।</p>
+            </div>
+            <span class="dashboard-count-badge" id="dashboardLifetimeTotal">0 कुल कार्ड</span>
+          </div>
           <div class="table-container">
-            <table class="data-table">
+            <table class="data-table admin-performance-table">
               <thead>
                 <tr>
-                  <th>प्रशासक नाम</th>
-                  <th>भूमिका (Role)</th>
-                  <th>बनाए गए कार्ड</th>
+                  <th>एडमिन</th>
+                  <th>एडमिन बनाया गया</th>
+                  <th>कुल कार्ड</th>
+                  <th>सक्रिय</th>
+                  <th>डिलीट किए</th>
+                  <th>आज</th>
                 </tr>
               </thead>
-              <tbody id="leaderboardTableBody"></tbody>
+              <tbody id="adminActivityTableBody">
+                <tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">लोड हो रहा है...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
+      </div>
+
+      <div class="dashboard-chart-grid">
+        <div class="form-panel dashboard-panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h3>🏆 Lifetime Work Share</h3>
+              <p>अब तक बने सभी cards में प्रत्येक admin का प्रतिशत।</p>
+            </div>
+            <span class="dashboard-count-badge" id="dashboardLifetimeChartTotal">0</span>
+          </div>
+          <div id="lifetimeShareChart" class="share-chart"></div>
+        </div>
+
+        <div class="form-panel dashboard-panel">
+          <div class="dashboard-panel-title">
+            <div>
+              <h3>⚡ Today's Work Share</h3>
+              <p>आज बने cards में प्रत्येक admin का प्रतिशत।</p>
+            </div>
+            <span class="dashboard-count-badge" id="dashboardTodayChartTotal">0</span>
+          </div>
+          <div id="todayShareChart" class="share-chart"></div>
+        </div>
+      </div>
+
+      <div class="form-panel dashboard-panel dashboard-recent-panel">
+        <div class="dashboard-panel-title">
+          <div>
+            <h3>🕒 हाल में बनाए गए निमंत्रण</h3>
+            <p>सिर्फ latest 10 records दिखाए जाते हैं। पूरे records के लिए “सहेजे गए रिकॉर्ड्स” खोलें।</p>
+          </div>
+          <span class="dashboard-count-badge">अधिकतम 10</span>
+        </div>
+        <div id="dashboardRecentCards"></div>
       </div>
     </section>
 
@@ -193,21 +237,6 @@
               <textarea id="inputGuestAbout" class="form-textarea" placeholder="उदा: प्रख्यात साहित्यकार, पूर्व कुलपति एवं राष्ट्रीय कवि, नई दिल्ली" required></textarea>
             </div>
 
-            <!-- Requirement: Editable Vishisht Atithi / Guest Honor Badge -->
-            <div class="form-group">
-              <label for="inputGuestBadge">
-                अतिथि सम्मान पद (Guest Honor Badge - Vishisht Atithi Part) <span class="required">*</span>
-              </label>
-              <input type="text" id="inputGuestBadge" class="form-input" value="विशिष्ट अतिथि" placeholder="उदा: विशिष्ट अतिथि / मुख्य अतिथि" required />
-              <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
-                <button type="button" class="action-btn badge-preset-btn" data-badge="विशिष्ट अतिथि">विशिष्ट अतिथि</button>
-                <button type="button" class="action-btn badge-preset-btn" data-badge="मुख्य अतिथि">मुख्य अतिथि</button>
-                <button type="button" class="action-btn badge-preset-btn" data-badge="सारस्वत अतिथि">सारस्वत अतिथि</button>
-                <button type="button" class="action-btn badge-preset-btn" data-badge="विशिष्ट वक्ता">विशिष्ट वक्ता</button>
-                <button type="button" class="action-btn badge-preset-btn" data-badge="सम्मानित अतिथि">सम्मानित अतिथि</button>
-              </div>
-            </div>
-
             <!-- Requirement 3 & 4: Guest Photo with Cropper -->
             <div class="form-group">
               <label>
@@ -252,27 +281,6 @@
               </select>
             </div>
 
-            <!-- Event Details (Customizable) -->
-            <details style="margin-bottom: 1rem; background: #faf8f5; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem 0.8rem;">
-              <summary style="font-size: 0.85rem; font-weight: 700; cursor: pointer; color: var(--gold-dark);">
-                ⚙️ महोत्सव तिथि, समय एवं स्थान विवरण (Event Details)
-              </summary>
-              <div style="margin-top: 0.75rem;">
-                <div class="form-group">
-                  <label for="inputEventDate" style="font-size: 0.75rem;">महोत्सव तिथि (Date)</label>
-                  <input type="text" id="inputEventDate" class="form-input" value="15-17 नवंबर 2026" style="padding: 0.4rem;" />
-                </div>
-                <div class="form-group">
-                  <label for="inputEventTime" style="font-size: 0.75rem;">समय (Time)</label>
-                  <input type="text" id="inputEventTime" class="form-input" value="सायं 5:00 बजे से" style="padding: 0.4rem;" />
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="inputEventVenue" style="font-size: 0.75rem;">स्थान (Venue)</label>
-                  <input type="text" id="inputEventVenue" class="form-input" value="मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर" style="padding: 0.4rem;" />
-                </div>
-              </div>
-            </details>
-
             <!-- Requirement 5: Validation Checksum Panel (ensures nothing is left blank) -->
             <div class="checksum-panel">
               <div class="checksum-header">
@@ -283,31 +291,23 @@
                 <li class="checklist-item pending" id="checkTitle" data-label="संबोधन व लिंग चयन">○ संबोधन व लिंग चयन</li>
                 <li class="checklist-item pending" id="checkName" data-label="अतिथि का नाम">○ अतिथि का नाम</li>
                 <li class="checklist-item pending" id="checkAbout" data-label="अतिथि का परिचय/पद">○ अतिथि का परिचय/पद</li>
-                <li class="checklist-item pending" id="checkBadge" data-label="सम्मान पद (विशिष्ट अतिथि)">○ सम्मान पद (विशिष्ट अतिथि)</li>
-                <li class="checklist-item pending" id="checkPhoto" data-label="क्रॉप्ड फ़ोटो">○ क्रॉप्ड फ़ोटो</li>
+                    <li class="checklist-item pending" id="checkPhoto" data-label="क्रॉप्ड फ़ोटो">○ क्रॉप्ड फ़ोटो</li>
               </ul>
               <div class="checksum-hash-display" id="checksumHashDisplay">
                 प्रतीक्षारत: सभी अनिवार्य फ़ील्ड भरें
               </div>
             </div>
 
-            <!-- Save & Download Action Buttons -->
+            <!-- Save & Download Action -->
             <div class="form-action-group">
               <button type="button" class="btn-primary" id="btnSaveRecord" disabled>
-                💾 सहेजें व कोड उत्पन्न करें (Save to Records)
+                💾 सहेजें, कोड उत्पन्न करें व PNG डाउनलोड करें
               </button>
-              <div class="button-row">
-                <button type="button" class="btn-secondary" id="btnDownloadPng" style="flex: 1;" disabled>
-                  📥 PNG डाउनलोड
-                </button>
-                <button type="button" class="btn-secondary" id="btnDownloadPdf" style="flex: 1;" disabled>
-                  📄 PDF डाउनलोड
-                </button>
+              <div style="font-size:0.76rem; color:var(--text-muted); text-align:center; margin-top:2px;">
+                एक ही क्लिक में रिकॉर्ड वेबसाइट पर सुरक्षित होगा और अंतिम PNG आपके फोन/कंप्यूटर में डाउनलोड होगा।
               </div>
             </div>
-
           </form>
-        </div>
 
         <!-- Live Preview Stage Column -->
         <div class="preview-panel">
@@ -488,7 +488,7 @@
 
           <div class="form-group">
             <label for="settingsProgramSubtitle">उपशीर्षक / टैगलाइन (Program Subtitle)</label>
-            <input type="text" id="settingsProgramSubtitle" class="form-input" value="सांस्कृतिक, साहित्यिक एवं कला महासमागम" />
+            <input type="text" id="settingsProgramSubtitle" class="form-input" value="साहित्य, संगीत, सिनेमा" />
           </div>
 
           <div class="form-group">
@@ -513,7 +513,7 @@
 
           <div class="form-group">
             <label for="settingsOrganizerName">विनीत एवं स्वागताकांक्षी (Organizer / RSVP)</label>
-            <input type="text" id="settingsOrganizerName" class="form-input" value="समस्त आयोजन समिति, सदानीरा महोत्सव न्यास" />
+            <input type="text" id="settingsOrganizerName" class="form-input" value="टीम सदानीरा" />
           </div>
 
           <div style="margin-top: 1.5rem; display: flex; gap: 10px;">
@@ -523,6 +523,27 @@
             <button type="button" class="btn-secondary" id="btnPreviewMasterSettings">
               👁️ पूर्वावलोकन देखें
             </button>
+          </div>
+
+          <div class="form-panel" style="margin-top:2rem; border:1px solid rgba(220,38,38,.35); background:rgba(220,38,38,.04);">
+            <div class="panel-header">
+              <h2><span>⚠️</span> उत्पादन से पहले सभी कार्ड डेटा साफ करें</h2>
+            </div>
+            <p style="font-size:.9rem;color:var(--text-muted);line-height:1.6;">
+              यह विकल्प केवल Super Admin के लिए है। सभी invitation records और <strong>uploads/</strong> में मौजूद guest photos स्थायी रूप से हटेंगे। Admin/Users और Master Card Settings सुरक्षित रहेंगे।
+              गलती से चलने से बचाने के लिए वर्तमान Super Admin password और exact confirmation phrase दोनों देना अनिवार्य है।
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1rem;">
+              <div class="form-group" style="margin:0;">
+                <label for="resetAllCardsPassword">Super Admin Password</label>
+                <input type="password" id="resetAllCardsPassword" class="form-input" autocomplete="current-password" placeholder="वर्तमान password" />
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label for="resetAllCardsPhrase">Confirmation Phrase</label>
+                <input type="text" id="resetAllCardsPhrase" class="form-input" placeholder="DELETE ALL CARDS" autocomplete="off" />
+              </div>
+            </div>
+            <button type="button" class="btn-secondary" id="btnResetAllCards" style="margin-top:1rem;border-color:#dc2626;color:#dc2626;font-weight:800;">🗑️ सभी कार्ड डेटा साफ करें</button>
           </div>
         </form>
       </div>
@@ -595,7 +616,7 @@
     <div class="dialog-card">
       <div class="dialog-body" style="padding: 2rem 2.25rem;">
         <div class="auth-brand-logo">
-          <div class="brand-emblem" style="width: 56px; height: 56px; font-size: 2rem;">🌸</div>
+          <div class="brand-emblem brand-logo-wrap auth-brand-logo-wrap" style="width: 56px; height: 56px;"><img src="/assets/Sadanira-logo.png" alt="सदानीरा महोत्सव" class="brand-logo" /></div>
           <h2 style="font-family:'Rozha One', serif; color:var(--primary); font-size: 1.6rem; margin-top:8px;">सदानीरा महोत्सव</h2>
           <p style="font-size: 0.85rem; color: var(--text-muted);">निमंत्रण पत्र पोर्टल में प्रवेश करें</p>
         </div>
@@ -616,13 +637,6 @@
           </button>
         </form>
 
-        <div class="demo-credentials-box">
-          <p>🔑 त्वरित परीक्षण क्रेडेंशियल (Click to Fill):</p>
-          <div class="demo-buttons-row">
-            <button type="button" class="demo-btn" id="btnFillSuperAdmin">Super Admin</button>
-            <button type="button" class="demo-btn" id="btnFillAdmin">Sub Admin</button>
-          </div>
-        </div>
       </div>
     </div>
   </dialog>
