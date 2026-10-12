@@ -1,0 +1,101 @@
+{
+  "version": "1.0",
+  "exported_at": "2026-10-08T06:34:21.405Z",
+  "description": "Authoritative Production Migration Snapshot from sadaneera.sqlite",
+  "users": [
+    {
+      "id": 1,
+      "username": "superadmin",
+      "password_hash": "$2b$10$9wsY/8PVkU9r.6Y4dhyMF.xyBFwtSQ44dnGwgSO23OkElF5iDpWB6",
+      "full_name": "मुख्य प्रशासक (Super Admin)",
+      "email": "superadmin@sadaneera.org",
+      "role": "superadmin",
+      "is_active": 1,
+      "created_at": "2026-09-24 07:03:40"
+    },
+    {
+      "id": 4,
+      "username": "avanish@sadaneera",
+      "password_hash": "$2b$10$Npfi68FPcTONXXfV3louvuU4RDocoJ1mjqBZScnc9Otc9mbkGKjQW",
+      "full_name": "अवनीश त्रिपाठी",
+      "email": "tavanish96@gmail.com",
+      "role": "admin",
+      "is_active": 1,
+      "created_at": "2026-09-29 09:09:20"
+    },
+    {
+      "id": 6,
+      "username": "vivek@sadaneera",
+      "password_hash": "$2b$10$Lt.4TId/jHBJLHQv9jmnpuk33p/t6j29z188Ixsck8j6FwVUSwWiS",
+      "full_name": "विवेक पाठक",
+      "email": "vivekpathak930412@gmail.com",
+      "role": "admin",
+      "is_active": 1,
+      "created_at": "2026-09-29 09:18:47"
+    },
+    {
+      "id": 7,
+      "username": "sarvesh@sadaneera",
+      "password_hash": "$2b$10$fb8zVkiOd3LzeMfKCkjCcuVbtyFuwM/rS4.hkDgSHtf/QKwoPL0dS",
+      "full_name": "सर्वेश तिवारी",
+      "email": "sarveshtiwari@gmail.com",
+      "role": "admin",
+      "is_active": 1,
+      "created_at": "2026-09-29 09:52:11"
+    },
+    {
+      "id": 9,
+      "username": "rajnish@sadaneera",
+      "password_hash": "$2b$10$m1OazLHMb/SwNE8bqRvZZeCQeP10jrMiUjC/1j9O5T5ZcvuXtsAnC",
+      "full_name": "रजनीश राय",
+      "email": "rajnishrai41@gmail.com",
+      "role": "admin",
+      "is_active": 1,
+      "created_at": "2026-09-30 09:26:12"
+    }
+  ],
+  "event_settings": {
+    "id": 1,
+    "program_name": "सदानीरा महोत्सव 2026",
+    "program_subtitle": "साहित्य | संगीत | सिनेमा",
+    "invocation": "चरणाश्रयी फाउण्डेशन की प्रस्तुति",
+    "event_date": "18 नवंबर 2026",
+    "event_time": "सुबह 10 बजे से",
+    "event_venue": "करवतही बाजार, गोपालगंज (बिहार)",
+    "invitation_message": "आइए, साहित्य को शहरों के वातानुकूलित कमरों से निकाल कर देहात की चौपाल तक ले चलते हैं...",
+    "organizer_name": "टीम सदानीरा",
+    "updated_by": "production_immutable",
+    "updated_at": "2026-10-06 16:49:53"
+  },
+  "invitations": [
+    {
+      "id": 2,
+      "card_code": "SN-0001-6767",
+      "title": "श्री",
+      "gender": "male",
+      "guest_name": "rajan kumar ji",
+      "guest_about": "jsdjksn",
+      "photo_url": "/uploads/crop_1791309156680_705fba9d.jpg",
+      "theme": "royal-gold",
+      "event_date": "18 नवंबर 2026",
+      "event_time": "सुबह 10 बजे से",
+      "event_venue": "करवतही बाजार, गोपालगंज (बिहार)",
+      "checksum": "1a2ef45926915a354377e94827476313a3e84f70c944b570e88422bf8579d901",
+      "created_by_id": 1,
+      "created_by_name": "मुख्य प्रशासक (Super Admin)",
+      "created_by_username": "superadmin",
+      "created_at": "2026-10-06 17:52:36",
+      "guest_badge": "विशिष्ट अतिथि",
+      "card_serial": "0001-6767",
+      "is_deleted": 0,
+      "deleted_at": null,
+      "deleted_by_id": null,
+      "deleted_by_name": null,
+      "deleted_by_username": null
+    }
+  ],
+  "card_sequence": {
+    "id": 1,
+    "last_number": 1
+  }
+}

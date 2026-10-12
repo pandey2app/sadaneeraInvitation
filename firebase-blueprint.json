@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User and admin accounts with hashed credentials and roles",
+      "type": "object",
+      "properties": {
+        "id": { "type": "number", "description": "Numeric ID for compatibility" },
+        "username": { "type": "string", "maxLength": 100 },
+        "password_hash": { "type": "string", "maxLength": 255 },
+        "full_name": { "type": "string", "maxLength": 200 },
+        "email": { "type": "string", "maxLength": 200 },
+        "role": { "type": "string", "enum": ["superadmin", "admin", "user"] },
+        "is_active": { "type": "number" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["username", "password_hash", "full_name", "role"]
+    },
+    "Invitation": {
+      "title": "Invitation",
+      "description": "Guest invitation cards for Sadanira Mahotsav 2026",
+      "type": "object",
+      "properties": {
+        "id": { "type": "number" },
+        "card_code": { "type": "string", "maxLength": 50 },
+        "title": { "type": "string", "maxLength": 20 },
+        "gender": { "type": "string", "maxLength": 20 },
+        "guest_name": { "type": "string", "maxLength": 200 },
+        "guest_about": { "type": "string", "maxLength": 500 },
+        "photo_url": { "type": "string", "maxLength": 1000 },
+        "theme": { "type": "string", "maxLength": 50 },
+        "event_date": { "type": "string", "maxLength": 100 },
+        "event_time": { "type": "string", "maxLength": 100 },
+        "event_venue": { "type": "string", "maxLength": 255 },
+        "checksum": { "type": "string", "maxLength": 64 },
+        "created_by_id": { "type": "number" },
+        "created_by_name": { "type": "string", "maxLength": 200 },
+        "created_by_username": { "type": "string", "maxLength": 100 },
+        "created_at": { "type": "string" },
+        "guest_badge": { "type": "string", "maxLength": 50 },
+        "card_serial": { "type": "string", "maxLength": 50 },
+        "is_deleted": { "type": "number" },
+        "deleted_at": { "type": "string" },
+        "deleted_by_id": { "type": "number" },
+        "deleted_by_name": { "type": "string" },
+        "deleted_by_username": { "type": "string" }
+      },
+      "required": ["card_code", "guest_name"]
+    },
+    "EventSetting": {
+      "title": "EventSetting",
+      "description": "Event master settings for Sadanira Mahotsav",
+      "type": "object",
+      "properties": {
+        "id": { "type": "number" },
+        "program_name": { "type": "string" },
+        "program_subtitle": { "type": "string" },
+        "invocation": { "type": "string" },
+        "event_date": { "type": "string" },
+        "event_time": { "type": "string" },
+        "event_venue": { "type": "string" },
+        "invitation_message": { "type": "string" },
+        "organizer_name": { "type": "string" },
+        "updated_by": { "type": "string" },
+        "updated_at": { "type": "string" }
+      }
+    },
+    "CardSequence": {
+      "title": "CardSequence",
+      "description": "Global atomic counter for sequential card numbering",
+      "type": "object",
+      "properties": {
+        "last_number": { "type": "number" }
+      },
+      "required": ["last_number"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of all authorized users and admins"
+    },
+    "/invitations/{invitationId}": {
+      "schema": "Invitation",
+      "description": "Collection of invitation cards"
+    },
+    "/event_settings/{settingId}": {
+      "schema": "EventSetting",
+      "description": "Global event settings"
+    },
+    "/card_sequence/{sequenceId}": {
+      "schema": "CardSequence",
+      "description": "Sequence counter tracking the highest card number"
+    }
+  }
+}

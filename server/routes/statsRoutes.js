@@ -7,20 +7,26 @@ router.use(authenticateToken);
 
 // GET /api/stats/dashboard
 // Dashboard activity is intentionally visible to every authenticated admin.
-router.get('/dashboard', (req, res) => {
+router.get('/dashboard', async (req, res) => {
   try {
-    const totalCards = db.prepare('SELECT COUNT(*) AS count FROM invitations').get().count;
-    const todayCards = db.prepare(`
+    const totalCardsRow = await db.prepare('SELECT COUNT(*) AS count FROM invitations').get();
+    const totalCards = totalCardsRow ? parseInt(totalCardsRow.count, 10) : 0;
+
+    const todayCardsRow = await db.prepare(`
       SELECT COUNT(*) AS count
       FROM invitations
       WHERE DATE(created_at) = DATE('now', 'localtime')
-    `).get().count;
+    `).get();
+    const todayCards = todayCardsRow ? parseInt(todayCardsRow.count, 10) : 0;
 
-    const totalAdmins = db.prepare("SELECT COUNT(*) AS count FROM users WHERE role IN ('admin','superadmin') AND is_active = 1").get().count;
-    const myCards = db.prepare('SELECT COUNT(*) AS count FROM invitations WHERE created_by_id = ?').get(req.user.id).count;
+    const totalAdminsRow = await db.prepare("SELECT COUNT(*) AS count FROM users WHERE role IN ('admin','superadmin') AND is_active = 1").get();
+    const totalAdmins = totalAdminsRow ? parseInt(totalAdminsRow.count, 10) : 0;
+
+    const myCardsRow = await db.prepare('SELECT COUNT(*) AS count FROM invitations WHERE created_by_id = ?').get(req.user.id);
+    const myCards = myCardsRow ? parseInt(myCardsRow.count, 10) : 0;
 
     // Keep dashboard recent activity compact: maximum 10 records.
-    const recentCards = db.prepare(`
+    const recentCards = await db.prepare(`
       SELECT id, card_code, title, guest_name, photo_url, created_by_name, created_at, theme, is_deleted,
              deleted_by_name, deleted_at
       FROM invitations
@@ -30,7 +36,7 @@ router.get('/dashboard', (req, res) => {
 
     // All admins are included. Counts are lifetime counts; deleted cards remain
     // part of accountability totals because soft-deleted records are retained.
-    const adminActivity = db.prepare(`
+    const adminActivity = await db.prepare(`
       SELECT
         u.id,
         u.full_name,

@@ -1,0 +1,33 @@
+# ============================================================================
+# Cloudflare Worker Configuration for Sadaneera Mahotsav 2026
+# ============================================================================
+
+name = "sadaneera-mahotsav"
+main = "src/index.js"
+compatibility_date = "2024-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Static Assets Configuration (Serves existing public/ frontend files)
+assets = { directory = "../public", binding = "ASSETS", not_found_handling = "single-page-application", run_worker_first = true }
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "sadaneera-invitations-test"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Non-sensitive Environment Variables
+[vars]
+EVENT_NAME = "सदानीरा महोत्सव 2026"
+
+# Secrets to be configured via `wrangler secret put <KEY>`:
+# -------------------------------------------------------------
+# wrangler secret put JWT_SECRET
+# wrangler secret put GOOGLE_DRIVE_CLIENT_ID
+# wrangler secret put GOOGLE_DRIVE_CLIENT_SECRET
+# wrangler secret put GOOGLE_DRIVE_REFRESH_TOKEN
+# wrangler secret put GOOGLE_DRIVE_FOLDER_ID
+# wrangler secret put SUPERADMIN_USERNAME
+# wrangler secret put SUPERADMIN_PASSWORD
+# wrangler secret put SUPERADMIN_NAME
+# wrangler secret put SUPERADMIN_EMAIL

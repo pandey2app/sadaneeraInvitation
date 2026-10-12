@@ -2,14 +2,12 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { authenticateToken, requireSuperAdmin } = require('../auth');
+const { syncMasterSettingsBackup } = require('../backupSync');
 
-// All settings routes require login
-router.use(authenticateToken);
-
-// GET /api/settings/card-content - Read current master event card template
-router.get('/card-content', (req, res) => {
+// GET /api/settings/card-content - Read current master event card template from live DB
+router.get('/card-content', async (req, res) => {
   try {
-    const settings = db.prepare('SELECT * FROM event_settings WHERE id = 1').get();
+    const settings = await db.prepare('SELECT * FROM event_settings WHERE id = 1').get();
     if (!settings) {
       return res.status(404).json({ success: false, message: 'Settings not found.' });
     }
@@ -20,8 +18,8 @@ router.get('/card-content', (req, res) => {
   }
 });
 
-// PUT /api/settings/card-content - Update master event card template (Super Admin ONLY!)
-router.put('/card-content', requireSuperAdmin, (req, res) => {
+// PUT /api/settings/card-content - Update master event card template (Super Admin ONLY)
+router.put('/card-content', authenticateToken, requireSuperAdmin, async (req, res) => {
   try {
     const {
       program_name,
@@ -38,7 +36,7 @@ router.put('/card-content', requireSuperAdmin, (req, res) => {
       return res.status(400).json({ success: false, message: 'कार्यक्रम का नाम (Program Name) आवश्यक है।' });
     }
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE event_settings
       SET 
         program_name = ?,
@@ -64,7 +62,17 @@ router.put('/card-content', requireSuperAdmin, (req, res) => {
       req.user.username
     );
 
-    const updated = db.prepare('SELECT * FROM event_settings WHERE id = 1').get();
+    // Immediately checkpoint SQLite WAL if applicable
+    try {
+      if (typeof db.pragma === 'function') db.pragma('wal_checkpoint(TRUNCATE)');
+    } catch (walErr) {
+      console.warn('WAL checkpoint warning:', walErr.message);
+    }
+
+    // Persist to master_settings.json
+    syncMasterSettingsBackup(db);
+
+    const updated = await db.prepare('SELECT * FROM event_settings WHERE id = 1').get();
 
     res.json({
       success: true,

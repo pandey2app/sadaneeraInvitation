@@ -2,8 +2,25 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>सदानीरा महोत्सव | निमंत्रण पत्र प्रणाली (Sadaneera Mahotsav)</title>
+  <meta name="description" content="सदानीरा महोत्सव 2026 - डिजिटल निमंत्रण पत्र निर्माण एवं प्रबंधन पोर्टल (Sadaneera Mahotsav Invitation Management Portal)">
+  <meta property="og:title" content="सदानीरा महोत्सव | निमंत्रण पत्र प्रणाली (Sadaneera Mahotsav)">
+  <meta property="og:description" content="सदानीरा महोत्सव 2026 - डिजिटल निमंत्रण पत्र निर्माण एवं प्रबंधन पोर्टल (Sadaneera Mahotsav Invitation Management Portal)">
+  <meta property="og:image" content="/assets/Sadanira-logo.png">
+
+  <!-- Favicon & Site Icons (Using existing Sadanira Logo) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
+  <link rel="icon" type="image/png" sizes="500x500" href="/assets/Sadanira-logo.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="सदानीरा महोत्सव">
+  <meta name="theme-color" content="#7c1417">
   
   <!-- Google Fonts: Devanagari & Latin -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +35,66 @@
   <link rel="stylesheet" href="/css/card-themes.css">
 </head>
 <body>
+
+  <!-- ==========================================================================
+       Application Startup / Splash / Loading Screen (Full-Screen Branded Experience)
+       ========================================================================== -->
+  <div id="appSplashScreen" class="app-splash-screen" role="status" aria-live="polite">
+    <div class="splash-card">
+      <div class="splash-logo-wrap">
+        <img src="/assets/Sadanira-logo.png" alt="सदानीरा महोत्सव" class="splash-logo-img" />
+      </div>
+      <h1 class="splash-title">सदानीरा महोत्सव</h1>
+      <p class="splash-subtitle">निमंत्रण कार्ड जनरेटर</p>
+      
+      <div class="splash-divider"></div>
+
+      <div class="splash-developer-box">
+        <p class="splash-dev-by">Developed by <strong>आदित्य प्रकाश पांडेय</strong></p>
+        <p class="splash-phone">9661779398</p>
+        <p class="splash-handle">@pandey2app</p>
+      </div>
+
+      <div class="splash-loader" aria-hidden="true">
+        <div class="splash-loader-progress"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      window.__splashStartTime = Date.now();
+      window.__dismissSplash = function() {
+        var el = document.getElementById('appSplashScreen');
+        if (!el) return;
+        el.dataset.dismissed = 'true';
+        el.classList.add('splash-hidden');
+        el.style.opacity = '0';
+        setTimeout(function() {
+          if (el.dataset.dismissed === 'true') {
+            el.style.visibility = 'hidden';
+            el.style.pointerEvents = 'none';
+          }
+        }, 380);
+      };
+      window.__showSplash = function() {
+        var el = document.getElementById('appSplashScreen');
+        if (!el) return;
+        el.dataset.dismissed = 'false';
+        el.classList.remove('splash-hidden');
+        el.style.visibility = 'visible';
+        el.style.pointerEvents = 'all';
+        // Force reflow so transition works if immediately following display change
+        void el.offsetHeight;
+        el.style.opacity = '1';
+      };
+      // Catastrophic script load failsafe (never stays stuck if network blocks script tags)
+      window.__splashFailsafeTimer = setTimeout(function() {
+        if (typeof window.__dismissSplash === 'function') {
+          window.__dismissSplash();
+        }
+      }, 5000);
+    })();
+  </script>
 
   <!-- ==========================================================================
        Top Site Header
@@ -57,7 +134,7 @@
           <span id="currentUserName">लोड हो रहा है...</span>
           <span class="role-tag" id="currentUserRole">Admin</span>
         </div>
-        <button type="button" class="btn-logout" id="btnLogout" title="लॉगआउट">
+        <button type="button" class="btn-logout" id="btnLogout" title="लॉगआउट" onclick="window.performLogout && window.performLogout()">
           <span>🚪</span> बाहर निकलें
         </button>
       </div>
@@ -308,6 +385,7 @@
               </div>
             </div>
           </form>
+        </div>
 
         <!-- Live Preview Stage Column -->
         <div class="preview-panel">
@@ -468,57 +546,58 @@
     <!-- TAB 5: CARD CONTENT SETTINGS (SUPER ADMIN ONLY) -->
     <section class="tab-content" id="tab-settings">
       <div class="form-panel" style="max-width: 900px; margin: 0 auto; padding: 2rem;">
-        <div class="panel-header">
-          <h2><span>⚙️</span> महोत्सव कार्ड सामग्री एवं विवरण संपादन (Master Card Contents)</h2>
+        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <h2><span>⚙️</span> महोत्सव कार्ड सामग्री एवं विवरण (Master Card Configuration)</h2>
+          <span style="background: rgba(3, 105, 161, 0.1); color: #0369a1; border: 1px solid rgba(3, 105, 161, 0.3); padding: 4px 12px; border-radius: 99px; font-weight: 700; font-size: 0.8rem;">🔒 स्थायी उत्पादन कॉन्फ़िगरेशन (Immutable - Read Only)</span>
         </div>
         <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom: 1.5rem;">
-          यहाँ संपादित की गई सामग्री सभी एडमिन्स द्वारा बनाए जाने वाले निमंत्रण पत्रों का मुख्य आधार बनेगी। केवल मुख्य प्रशासक (Super Admin) को यह सामग्री बदलने की अनुमति है।
+          यह सामग्री स्थायी एवं अपरिवर्तनीय उत्पादन कॉन्फ़िगरेशन (Immutable Production Configuration) है। सभी नए एवं पुनः जनरेट होने वाले निमंत्रण पत्रों पर यह स्वतः लागू होती है।
         </p>
 
         <form id="masterSettingsForm">
           <div class="form-group">
             <label for="settingsProgramName">महोत्सव / कार्यक्रम का मुख्य नाम (Program Name) <span class="required">*</span></label>
-            <input type="text" id="settingsProgramName" class="form-input" value="सदानीरा महोत्सव 2026" required />
+            <input type="text" id="settingsProgramName" class="form-input" readonly value="सदानीरा महोत्सव 2026" required />
           </div>
 
           <div class="form-group">
-            <label for="settingsInvocation">शीर्ष पावन आह्वान / श्लोक (Invocation Line)</label>
-            <input type="text" id="settingsInvocation" class="form-input" value="॥ सदानीरा जीवनदायिनी संस्कृतिधारा ॥" />
+            <label for="settingsInvocation">शीर्ष पावन आह्वान / Invocation Line / Line below heading</label>
+            <input type="text" id="settingsInvocation" class="form-input" readonly value="चरणाश्रयी फाउण्डेशन की प्रस्तुति" />
           </div>
 
           <div class="form-group">
             <label for="settingsProgramSubtitle">उपशीर्षक / टैगलाइन (Program Subtitle)</label>
-            <input type="text" id="settingsProgramSubtitle" class="form-input" value="साहित्य, संगीत, सिनेमा" />
+            <input type="text" id="settingsProgramSubtitle" class="form-input" readonly value="साहित्य | संगीत | सिनेमा" />
           </div>
 
           <div class="form-group">
             <label for="settingsInvitationMessage">सादर निमंत्रण संदेश (Auspicious Invitation Text)</label>
-            <textarea id="settingsInvitationMessage" class="form-textarea" rows="3">"आपको सादर आमंत्रित करते हुए हमें अपार हर्ष हो रहा है। आपकी गरिमामयी उपस्थिति इस सांस्कृतिक अनुष्ठान को नव ऊर्जा एवं भव्यता प्रदान करेगी।"</textarea>
+            <textarea id="settingsInvitationMessage" class="form-textarea" rows="3" readonly>आइए, साहित्य को शहरों के वातानुकूलित कमरों से निकाल कर देहात की चौपाल तक ले चलते हैं...</textarea>
           </div>
 
           <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
             <div class="form-group">
               <label for="settingsEventDate">महोत्सव दिनांक (Date)</label>
-              <input type="text" id="settingsEventDate" class="form-input" value="15-17 नवंबर 2026" />
+              <input type="text" id="settingsEventDate" class="form-input" readonly value="18 नवंबर 2026" />
             </div>
             <div class="form-group">
               <label for="settingsEventTime">समय (Time)</label>
-              <input type="text" id="settingsEventTime" class="form-input" value="सायं 5:00 बजे से" />
+              <input type="text" id="settingsEventTime" class="form-input" readonly value="सुबह 10 बजे से" />
             </div>
             <div class="form-group">
               <label for="settingsEventVenue">स्थान (Venue)</label>
-              <input type="text" id="settingsEventVenue" class="form-input" value="मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर" />
+              <input type="text" id="settingsEventVenue" class="form-input" readonly value="करवतही बाजार, गोपालगंज (बिहार)" />
             </div>
           </div>
 
           <div class="form-group">
             <label for="settingsOrganizerName">विनीत एवं स्वागताकांक्षी (Organizer / RSVP)</label>
-            <input type="text" id="settingsOrganizerName" class="form-input" value="टीम सदानीरा" />
+            <input type="text" id="settingsOrganizerName" class="form-input" readonly value="टीम सदानीरा" />
           </div>
 
           <div style="margin-top: 1.5rem; display: flex; gap: 10px;">
-            <button type="submit" class="btn-primary" id="btnSaveMasterSettings" style="flex: 1;">
-              💾 मुख्य कार्ड सामग्री सहेजें (Save Master Settings)
+            <button type="button" class="btn-primary" id="btnSaveMasterSettings" disabled style="flex: 1; opacity: 0.65; cursor: not-allowed;">
+              🔒 स्थायी उत्पादन कॉन्फ़िगरेशन (Immutable - Editing Disabled)
             </button>
             <button type="button" class="btn-secondary" id="btnPreviewMasterSettings">
               👁️ पूर्वावलोकन देखें
@@ -552,10 +631,20 @@
   </main>
 
   <!-- ==========================================================================
+       Site Footer & Developer Credit
+       ========================================================================== -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <p>सदानीरा महोत्सव 2026 &bull; डिजिटल निमंत्रण पत्र निर्माण एवं प्रबंधन पोर्टल</p>
+      <p class="footer-credit">Developed by <strong><a href="https://www.facebook.com/pandey2app/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">आदित्य प्रकाश पांडे</a></strong> (<a href="https://www.instagram.com/pandey2app/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">@pandey2app</a>)</p>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
        MODAL 1: Interactive Image Cropper Dialog
        ========================================================================== -->
   <dialog id="cropperModal">
-    <div class="dialog-card" style="width: 680px;">
+    <div class="dialog-card" style="width: 100%; max-width: 680px;">
       <div class="dialog-header">
         <h3>✂️ अतिथि की फ़ोटो क्रॉप करें (Crop Guest Photo)</h3>
         <button type="button" class="dialog-close-btn" id="btnCloseCropper">&times;</button>
@@ -586,7 +675,7 @@
        MODAL 2: On-the-fly Card Regeneration & Preview Dialog
        ========================================================================== -->
   <dialog id="regenerateModal">
-    <div class="dialog-card" style="width: 1020px; max-width: 96vw;">
+    <div class="dialog-card" style="width: 100%; max-width: 1020px;">
       <div class="dialog-header">
         <h3>🔄 निमंत्रण पत्र पुनः पूर्वावलोकन एवं डाउनलोड (Live Regeneration)</h3>
         <button type="button" class="dialog-close-btn" id="btnCloseRegenerateModal">&times;</button>
@@ -612,12 +701,22 @@
   <!-- ==========================================================================
        MODAL 3: Authentication & Login Dialog
        ========================================================================== -->
-  <dialog id="authDialog">
+  <dialog id="authDialog" aria-labelledby="authDialogTitle">
     <div class="dialog-card">
       <div class="dialog-body" style="padding: 2rem 2.25rem;">
+        
+        <!-- Clear, prominent logout confirmation banner inside login card -->
+        <div id="authLogoutBanner" class="auth-logout-banner" style="display:none;" role="status">
+          <span class="auth-logout-icon">✅</span>
+          <div class="auth-logout-text">
+            <strong>आपका अकाउंट सफलतापूर्वक लॉगआउट हो गया है।</strong>
+            <span>You have logged out successfully.</span>
+          </div>
+        </div>
+
         <div class="auth-brand-logo">
           <div class="brand-emblem brand-logo-wrap auth-brand-logo-wrap" style="width: 56px; height: 56px;"><img src="/assets/Sadanira-logo.png" alt="सदानीरा महोत्सव" class="brand-logo" /></div>
-          <h2 style="font-family:'Rozha One', serif; color:var(--primary); font-size: 1.6rem; margin-top:8px;">सदानीरा महोत्सव</h2>
+          <h2 id="authDialogTitle" style="font-family:'Rozha One', serif; color:var(--primary); font-size: 1.6rem; margin-top:8px;">सदानीरा महोत्सव</h2>
           <p style="font-size: 0.85rem; color: var(--text-muted);">निमंत्रण पत्र पोर्टल में प्रवेश करें</p>
         </div>
 
@@ -636,10 +735,18 @@
             लॉगिन करें (Sign In)
           </button>
         </form>
-
       </div>
     </div>
   </dialog>
+
+  <!-- Floating In-App Install Prompt (Bottom-Right, Minimal & Mobile-Friendly) -->
+  <aside id="floatingInstallPrompt" class="floating-install-prompt" style="display:none;" aria-live="polite">
+    <button type="button" class="btn-install-floating" id="btnFloatingInstall" title="Sadanira Mahotsav ऐप इंस्टॉल करें">
+      <span class="install-prompt-icon" aria-hidden="true">📱</span>
+      <span class="install-prompt-text">Sadanira Mahotsav ऐप इंस्टॉल करें</span>
+    </button>
+    <button type="button" class="btn-install-dismiss" id="btnDismissInstall" title="बंद करें" aria-label="बंद करें">✕</button>
+  </aside>
 
   <!-- Toast Notification Container -->
   <div id="toastContainer"></div>

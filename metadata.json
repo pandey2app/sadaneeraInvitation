@@ -1,0 +1,8 @@
+{
+  "name": "सदानीरा महोत्सव | निमंत्रण पत्र प्रणाली (Sadaneera Mahotsav)",
+  "description": "सदानीरा महोत्सव 2026 - डिजिटल निमंत्रण पत्र निर्माण एवं प्रबंधन पोर्टल (Sadaneera Mahotsav Invitation Management Portal)",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

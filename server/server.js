@@ -10,7 +10,7 @@ const statsRoutes = require('./routes/statsRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 3000;
 
 // Enable CORS
 app.use(cors());
@@ -33,6 +33,7 @@ const publicPath = path.join(__dirname, '..', 'public');
 app.use(express.static(publicPath));
 
 // API routes
+app.use('/api/photos/drive/:fileId', (req, res) => res.redirect('/api/cards/photo/drive/' + req.params.fileId));
 app.use('/api/auth', authRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/cards', cardRoutes);
@@ -65,10 +66,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
   console.log(`🌸 सदानीरा महोत्सव (Sadaneera Mahotsav) Invitation System`);
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
   console.log(`🔐 Authentication: Login required for all protected operations.`);
   console.log(`=======================================================`);
 });
