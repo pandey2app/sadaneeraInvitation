@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    सदानीरा महोत्सव (SADANEERA MAHOTSAV) - PORTRAIT INVITATION CARD THEMES
    All Themes in Majestic Portrait Mode with Large Guest Photo Frame
    ========================================================================== */
@@ -1179,12 +1179,13 @@
    FINAL TYPOGRAPHY POLISH
    ======================================================================== */
 
-/* Existing Master Settings presentation line — only enlarge/bolden it. */
+/* Foundation presentation line at top of header — slightly smaller than previous size */
 .invitation-card .card-presentation-line {
-  font-size: 1.82rem !important;
+  font-size: 1.38rem !important;
   line-height: 1.22;
-  font-weight: 900 !important;
-  letter-spacing: .65px;
+  font-weight: 800 !important;
+  letter-spacing: .5px;
+  margin-bottom: 3px;
 }
 
 /* Make the Latin part of "Lit festival" carry the same visual weight as
@@ -1205,7 +1206,7 @@
 
 @media (max-width: 600px) {
   .invitation-card .card-presentation-line {
-    font-size: 1.46rem !important;
+    font-size: 1.15rem !important;
   }
 
   .invitation-card .lit-festival-line {

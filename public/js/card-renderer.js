@@ -29,23 +29,17 @@ const CardRenderer = {
     const checksum = data.checksum || 'VERIFIED';
     const contactNumbers = ['9123220920', '8651419161', '9661779398', '7808953784'];
     
-    // Global contents managed by Super Admin
+    // Dynamic event details from Settings / Database
     const programName = data.programName || 'सदानीरा महोत्सव 2026';
-    const programSubtitle = data.programSubtitle || 'साहित्य, संगीत, सिनेमा';
-    const invocation = data.invocation || '॥ सदानीरा जीवनदायिनी संस्कृतिधारा ॥';
-    // Keep a single presentation line; never render a duplicate.
-    const presentationLine = String(data.presentationLine || '').trim();
-    // Strip any foundation/presentation phrase already embedded in invocation so it renders only once.
-    const cleanInvocation = String(invocation)
-      .replace(/चरणाश्रय[ी]?\s*फाउंडेशन\s*की\s*प्रस्तुति/g, '')
-      .trim();
-    const invitationMessage = data.invitationMessage || '"आपको सादर आमंत्रित करते हुए हमें अपार हर्ष हो रहा है। आपकी गरिमामयी उपस्थिति इस सांस्कृतिक अनुष्ठान को नव ऊर्जा एवं भव्यता प्रदान करेगी।"';
-    const eventDate = data.eventDate || '15-17 नवंबर 2026';
-    const eventTime = data.eventTime || 'सायं 5:00 बजे से';
-    const eventVenue = data.eventVenue || 'मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर';
-    const organizer = data.organizer || 'समस्त आयोजन समिति, सदानीरा महोत्सव न्यास';
+    const invocation = data.invocation !== undefined ? data.invocation : 'चरणाश्रयी फाउण्डेशन की प्रस्तुति';
+    const programSubtitle = data.programSubtitle !== undefined ? data.programSubtitle : 'साहित्य | संगीत | सिनेमा';
+    const invitationMessage = data.invitationMessage !== undefined ? data.invitationMessage : 'आइए, साहित्य को शहरों के वातानुकूलित कमरों से निकाल कर देहात की चौपाल तक ले चलते हैं...';
+    const eventDate = data.eventDate || '18 नवंबर 2026';
+    const eventTime = data.eventTime || 'सुबह 10 बजे से';
+    const eventVenue = data.eventVenue || 'करवतही बाजार, गोपालगंज (बिहार)';
+    const organizer = data.organizer !== undefined ? data.organizer : 'टीम सदानीरा';
     const venueHtml = String(eventVenue).includes(',')
-      ? String(eventVenue).replace(',', '<br>')
+      ? String(eventVenue).replace(',', ',<br>')
       : eventVenue;
 
     const cornerMarkup = this.getCornerSvg();
@@ -60,10 +54,9 @@ const CardRenderer = {
         <div class="corner-flourish corner-bl">${cornerMarkup}</div>
         <div class="corner-flourish corner-br">${cornerMarkup}</div>
 
-        <!-- Header Section (Managed by Super Admin) -->
+        <!-- Header Section -->
         <header class="card-header-section">
-          <div class="card-invocation">${cleanInvocation}</div>
-          <div class="card-presentation-line">${presentationLine}</div>
+          <div class="card-presentation-line card-invocation">${invocation}</div>
           <div class="sadaneera-logo-wrap">
             <img src="/assets/Sadanira-logo.png" alt="सदानीरा महोत्सव" class="sadaneera-logo" crossorigin="anonymous" />
           </div>
@@ -90,7 +83,7 @@ const CardRenderer = {
             <div class="guest-photo-container">
               <div class="guest-photo-frame">
               <div class="guest-photo-inner">
-                <img src="${photoUrl}" alt="${guestName}" crossorigin="anonymous" />
+                <img src="${photoUrl}" alt="${guestName}" crossorigin="anonymous" onerror="this.onerror=null; this.src='/assets/avatar-placeholder.svg';" />
               </div>
             </div>
               <div class="guest-honor-badge">सप्रेम निमंत्रण</div>
@@ -129,7 +122,7 @@ const CardRenderer = {
             <span class="icon">🏛️</span>
             <div>
               <div class="label">स्थान / Venue</div>
-              <div class="value">${venueHtml}</div>
+              <div class="value" title="${eventVenue}" data-venue="${eventVenue}">${venueHtml}</div>
             </div>
           </div>
         </section>
@@ -255,7 +248,11 @@ const CardRenderer = {
 
   async exportPDF(cardElement, filename = 'Sadaneera_Invitation.pdf') {
     if (!window.html2canvas || !window.jspdf) {
-      alert('PDF generation libraries loading, please try again.');
+      if (typeof window.showToast === 'function') {
+        window.showToast('PDF generation libraries loading, please try again.', 'error');
+      } else {
+        console.warn('PDF generation libraries loading, please try again.');
+      }
       return;
     }
 

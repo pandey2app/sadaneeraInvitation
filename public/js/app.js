@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // App State
   const state = {
     user: API.getCurrentUser(),
-    activeTab: 'generator',
+    activeTab: 'dashboard',
     masterSettings: null,
     form: {
       gender: 'male',
@@ -18,9 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
       about: '',
       badge: 'विशिष्ट अतिथि',
       theme: 'royal-gold',
-      eventDate: '15-17 नवंबर 2026',
-      eventTime: 'सायं 5:00 बजे से',
-      eventVenue: 'मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर',
       photoData: '',
       checksum: '',
       cardCode: 'SN-0001-XXXX'
@@ -102,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sync master settings form fields
     const setVal = (id, val) => {
       const el = document.getElementById(id);
-      if (el && val) el.value = val;
+      if (el) el.value = (val !== undefined && val !== null) ? val : '';
     };
 
     setVal('settingsProgramName', s.program_name);
@@ -113,20 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setVal('settingsEventTime', s.event_time);
     setVal('settingsEventVenue', s.event_venue);
     setVal('settingsOrganizerName', s.organizer_name);
-
-    // Sync default generator event inputs if user hasn't modified them
-    if (!state.form.eventDate || state.form.eventDate === '15-17 नवंबर 2026') {
-      state.form.eventDate = s.event_date;
-      setVal('inputEventDate', s.event_date);
-    }
-    if (!state.form.eventTime || state.form.eventTime === 'सायं 5:00 बजे से') {
-      state.form.eventTime = s.event_time;
-      setVal('inputEventTime', s.event_time);
-    }
-    if (!state.form.eventVenue || state.form.eventVenue === 'मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर') {
-      state.form.eventVenue = s.event_venue;
-      setVal('inputEventVenue', s.event_venue);
-    }
   }
 
   // Master Settings Form Submit Handler (Super Admin Only)
@@ -169,17 +152,131 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   // Auth & Session Management
   // ==========================================================================
-  function checkAuth() {
-    state.user = API.getCurrentUser();
-    if (!state.user || !API.getToken()) {
-      authDialog.showModal();
-    } else {
-      authDialog.close();
-      updateHeaderUserUI();
-      loadMasterSettings();
-      switchTab(state.activeTab);
+  function openLoginModal(isLogout = false) {
+    const dialog = document.getElementById('authDialog');
+    if (!dialog) return;
+
+    const logoutBanner = document.getElementById('authLogoutBanner');
+    if (logoutBanner) {
+      logoutBanner.style.display = isLogout ? 'flex' : 'none';
+    }
+
+    dialog.classList.add('is-visible');
+    dialog.setAttribute('open', '');
+    try {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } catch (e) {}
+
+    setTimeout(() => {
+      document.getElementById('loginUsername')?.focus();
+    }, 50);
+  }
+
+  function closeLoginModal() {
+    const dialog = document.getElementById('authDialog');
+    if (!dialog) return;
+    dialog.classList.remove('is-visible');
+    dialog.removeAttribute('open');
+    try {
+      if (dialog.open) dialog.close();
+    } catch (e) {}
+    const logoutBanner = document.getElementById('authLogoutBanner');
+    if (logoutBanner) {
+      logoutBanner.style.display = 'none';
     }
   }
+
+  function hideSplash() {
+    if (typeof window.__dismissSplash === 'function') {
+      window.__dismissSplash();
+    }
+    const splash = document.getElementById('appSplashScreen');
+    if (splash) {
+      splash.dataset.dismissed = 'true';
+      splash.classList.add('splash-hidden');
+      splash.style.opacity = '0';
+      setTimeout(() => {
+        if (splash.dataset.dismissed === 'true') {
+          splash.style.visibility = 'hidden';
+          splash.style.pointerEvents = 'none';
+        }
+      }, 380);
+    }
+  }
+
+  function showSplash() {
+    if (typeof window.__showSplash === 'function') {
+      window.__showSplash();
+    }
+    const splash = document.getElementById('appSplashScreen');
+    if (splash) {
+      splash.dataset.dismissed = 'false';
+      splash.classList.remove('splash-hidden');
+      splash.style.display = 'flex';
+      splash.style.visibility = 'visible';
+      splash.style.pointerEvents = 'all';
+      splash.style.zIndex = '100000000';
+      void splash.offsetHeight;
+      splash.style.opacity = '1';
+    }
+  }
+
+  async function checkAuth() {
+    const token = API.getToken();
+    const cachedUser = API.getCurrentUser();
+    if (!token || !cachedUser) {
+      document.body.classList.add('is-unauthenticated');
+      const adminNavBtn = document.getElementById('navBtnAdmins');
+      const settingsNavBtn = document.getElementById('navBtnSettings');
+      if (adminNavBtn) adminNavBtn.style.display = 'none';
+      if (settingsNavBtn) settingsNavBtn.style.display = 'none';
+
+      document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+
+      openLoginModal(false);
+      hideSplash();
+      return false;
+    }
+
+    try {
+      // Validate session against server /api/auth/me
+      const meData = await API.getMe();
+      if (meData && meData.success && meData.user) {
+        state.user = meData.user;
+        API.setSession(token, meData.user);
+        document.body.classList.remove('is-unauthenticated');
+        closeLoginModal();
+        updateHeaderUserUI();
+        try { await loadMasterSettings(); } catch (_) {}
+        switchTab(state.activeTab || 'dashboard');
+        if (typeof showInstallPromptOnce === 'function') {
+          showInstallPromptOnce();
+        }
+        return true;
+      } else {
+        throw new Error('Invalid session response');
+      }
+    } catch (err) {
+      console.warn('Session verification notice:', err.message);
+      API.clearSession();
+      state.user = null;
+      document.body.classList.add('is-unauthenticated');
+      openLoginModal(false);
+      return false;
+    } finally {
+      // GUARANTEED: Splash screen NEVER stays stuck
+      hideSplash();
+    }
+  }
+
+  // Prevent Escape key or accidental dismissal of login modal when not logged in
+  authDialog?.addEventListener('cancel', (e) => {
+    if (!API.getToken() || !state.user) {
+      e.preventDefault();
+    }
+  });
 
   function updateHeaderUserUI() {
     if (!state.user) return;
@@ -213,32 +310,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const res = await API.login(username, password);
-      showToast(`स्वागत है, ${res.user.full_name}!`, 'success');
-      authDialog.close();
       state.user = res.user;
+      document.body.classList.remove('is-unauthenticated');
+      closeLoginModal();
       updateHeaderUserUI();
-      loadMasterSettings();
-      switchTab('generator');
+      try { await loadMasterSettings(); } catch (_) {}
+      
+      // Automatically open dashboard upon successful login without requiring refresh
+      switchTab('dashboard');
+
+      showToast(`स्वागत है, ${res.user.full_name}!`, 'success');
+      if (typeof showInstallPromptOnce === 'function') {
+        showInstallPromptOnce();
+      }
     } catch (err) {
       showToast(err.message || 'लॉगिन विफल (Invalid credentials)', 'error');
     } finally {
+      // GUARANTEED: Always hide splash screen on login completion
+      hideSplash();
       submitBtn.disabled = false;
       submitBtn.textContent = 'लॉगिन करें (Sign In)';
     }
   });
 
-  // Logout Handler
-  document.getElementById('btnLogout')?.addEventListener('click', () => {
-    API.clearSession();
+  // Immediate, Deterministic and Reliable Logout Implementation with Branded Sadanira Splash Transition
+  let logoutTransitionTimer = null;
+
+  function performLogout() {
+    if (performLogout._running) return;
+    performLogout._running = true;
+
+    // 1. Full-screen existing Sadanira splash appears immediately covering complete viewport
+    showSplash();
+
+    // 2. Hide all protected elements and unauthenticated state immediately underneath splash
+    document.body.classList.add('is-unauthenticated');
+    document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+
+    // 3. Immediately invalidate session & reset user state
+    try {
+      API.clearSession();
+      fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    } catch (e) {
+      console.warn('Logout network error ignored:', e);
+    }
     state.user = null;
-    showToast('सत्र समाप्त किया गया (Logged out)', 'info');
-    checkAuth();
+
+    // 4. Clear header UI immediately
+    const nameEl = document.getElementById('currentUserName');
+    if (nameEl) nameEl.textContent = 'लॉगिन नहीं';
+    const roleEl = document.getElementById('currentUserRole');
+    if (roleEl) {
+      roleEl.textContent = '';
+      roleEl.className = 'role-tag';
+    }
+
+    const adminNavBtn = document.getElementById('navBtnAdmins');
+    const settingsNavBtn = document.getElementById('navBtnSettings');
+    if (adminNavBtn) adminNavBtn.style.display = 'none';
+    if (settingsNavBtn) settingsNavBtn.style.display = 'none';
+
+    // 5. Close any secondary modals and reset login inputs
+    try { document.getElementById('cropperModal')?.close(); } catch (e) {}
+    try { document.getElementById('regenerateModal')?.close(); } catch (e) {}
+
+    const usernameInput = document.getElementById('loginUsername');
+    const passwordInput = document.getElementById('loginPassword');
+    if (usernameInput) usernameInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+
+    if (typeof hideInstallPrompt === 'function') {
+      hideInstallPrompt(false);
+    }
+
+    // 6. Pre-position login modal underneath splash with logout confirmation banner
+    openLoginModal(true);
+
+    // 7. Subtle, smooth transition:
+    // Splash displays full viewport for ~600ms, then smoothly fades out over 380ms,
+    // seamlessly revealing the Login modal underneath with zero blank screen!
+    if (logoutTransitionTimer) clearTimeout(logoutTransitionTimer);
+    logoutTransitionTimer = setTimeout(() => {
+      hideSplash();
+      performLogout._running = false;
+    }, 600);
+  }
+
+  // Expose to window for reliable direct onclick triggering
+  window.performLogout = performLogout;
+
+  // Logout Click Handler
+  document.getElementById('btnLogout')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    performLogout();
   });
 
   window.addEventListener('auth:expired', () => {
     showToast('आपका सत्र समाप्त हो चुका है। कृपया पुनः लॉगिन करें।', 'error');
-    API.clearSession();
-    checkAuth();
+    performLogout();
   });
 
   // ==========================================================================
@@ -266,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabId === 'admins') loadAdminsList();
     if (tabId === 'settings') syncMasterSettingsToUI();
     if (tabId === 'generator') {
-      applyPreviewScale();
+      fitPreviewToContainer();
       renderLivePreview();
     }
   }
@@ -446,10 +615,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const scaler = document.getElementById('liveCardScaler');
     if (scaler) {
       scaler.style.transform = `scale(${state.previewScale})`;
+      const originWidth = 720; // portrait card natural width
       const originHeight = 1040; // portrait card natural height
       const scaledHeight = originHeight * state.previewScale;
+      const scaledWidth = originWidth * state.previewScale;
       scaler.style.height = `${originHeight}px`;
       scaler.style.marginBottom = `${-(originHeight - scaledHeight)}px`;
+      // Bounding box compensation so 720px width never forces horizontal page overflow
+      scaler.style.marginLeft = `${-(originWidth - scaledWidth) / 2}px`;
+      scaler.style.marginRight = `${-(originWidth - scaledWidth) / 2}px`;
     }
     const indicator = document.getElementById('scaleIndicator');
     if (indicator) indicator.textContent = `${Math.round(state.previewScale * 100)}%`;
@@ -462,33 +636,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  function fitPreviewToContainer(isManual = false) {
+    const viewport = document.getElementById('previewViewport');
+    if (!viewport) return;
+    const padding = window.innerWidth <= 768 ? 16 : 48;
+    const availWidth = Math.max(100, viewport.clientWidth - padding);
+    if (availWidth > 40) {
+      const fitScale = Math.min(0.85, Math.max(0.24, availWidth / 720));
+      state.previewScale = Math.round(fitScale * 100) / 100;
+      applyPreviewScale();
+    }
+  }
+
   document.getElementById('btnZoomOutPreview')?.addEventListener('click', () => {
-    if (state.previewScale > 0.35) {
-      state.previewScale = Math.max(0.35, state.previewScale - 0.06);
+    if (state.previewScale > 0.24) {
+      state.previewScale = Math.max(0.24, state.previewScale - 0.05);
       applyPreviewScale();
     }
   });
 
   document.getElementById('btnFitPreview')?.addEventListener('click', () => {
-    const viewport = document.getElementById('previewViewport');
-    if (viewport) {
-      const availWidth = viewport.clientWidth - 48;
-      const fitScale = Math.min(0.85, Math.max(0.35, availWidth / 720));
-      state.previewScale = fitScale;
-      applyPreviewScale();
-    }
+    fitPreviewToContainer(true);
+  });
+
+  let resizeDebounce = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeDebounce);
+    resizeDebounce = setTimeout(() => {
+      if (state.activeTab === 'generator') {
+        fitPreviewToContainer();
+      }
+    }, 120);
   });
 
   // Validation & Live Preview Re-rendering
   async function validateAndUpdate() {
+    const s = state.masterSettings || {};
     const evalResult = await validator.evaluate({
       title: state.form.title,
       gender: state.form.gender,
       name: state.form.name,
       about: state.form.about,
       badge: state.form.badge,
-      eventDate: state.form.eventDate,
-      eventVenue: state.form.eventVenue,
+      eventDate: s.event_date || '',
+      eventVenue: s.event_venue || '',
       photoData: state.form.photoData !== DEFAULT_AVATAR ? state.form.photoData : ''
     });
 
@@ -512,15 +703,17 @@ document.addEventListener('DOMContentLoaded', () => {
       theme: state.form.theme,
       cardCode: state.form.cardCode,
       checksum: state.form.checksum || 'SN-CHECKSUM',
-      programName: s.program_name || 'सदानीरा महोत्सव 2026',
-      programSubtitle: s.program_subtitle || 'सांस्कृतिक, साहित्यिक एवं कला महासमागम',
-      invocation: s.invocation || '॥ सदानीरा जीवनदायिनी संस्कृतिधारा ॥',
-      invitationMessage: s.invitation_message || '"आपको सादर आमंत्रित करते हुए हमें अपार हर्ष हो रहा है। आपकी गरिमामयी उपस्थिति इस सांस्कृतिक अनुष्ठान को नव ऊर्जा एवं भव्यता प्रदान करेगी।"',
-      eventDate: state.form.eventDate || s.event_date || '15-17 नवंबर 2026',
-      eventTime: state.form.eventTime || s.event_time || 'सायं 5:00 बजे से',
-      eventVenue: state.form.eventVenue || s.event_venue || 'मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर',
-      organizer: s.organizer_name || 'समस्त आयोजन समिति, सदानीरा महोत्सव न्यास'
+      programName: s.program_name,
+      programSubtitle: s.program_subtitle,
+      invocation: s.invocation,
+      invitationMessage: s.invitation_message,
+      eventDate: s.event_date,
+      eventTime: s.event_time,
+      eventVenue: s.event_venue,
+      organizer: s.organizer_name
     });
+
+    applyPreviewScale();
   }
 
   // ==========================================================================
@@ -532,6 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.textContent = 'सहेजा जा रहा है...';
 
     try {
+      const s = state.masterSettings || {};
       const payload = {
         title: state.form.title,
         gender: state.form.gender,
@@ -539,9 +733,9 @@ document.addEventListener('DOMContentLoaded', () => {
         guest_about: state.form.about.trim(),
         guest_badge: state.form.badge.trim() || 'विशिष्ट अतिथि',
         theme: state.form.theme,
-        event_date: state.form.eventDate,
-        event_time: state.form.eventTime,
-        event_venue: state.form.eventVenue,
+        event_date: s.event_date || '',
+        event_time: s.event_time || '',
+        event_venue: s.event_venue || '',
         photo_base64: state.form.photoData
       };
 
@@ -712,14 +906,14 @@ document.addEventListener('DOMContentLoaded', () => {
         theme: card.theme,
         cardCode: card.card_code,
         checksum: card.checksum ? `SN-${card.checksum.slice(0,8).toUpperCase()}` : 'VERIFIED',
-        programName: s.program_name || 'सदानीरा महोत्सव 2026',
-        programSubtitle: s.program_subtitle || 'सांस्कृतिक, साहित्यिक एवं कला महासमागम',
-        invocation: s.invocation || '॥ सदानीरा जीवनदायिनी संस्कृतिधारा ॥',
-        invitationMessage: s.invitation_message || '"आपको सादर आमंत्रित करते हुए हमें अपार हर्ष हो रहा है। आपकी गरिमामयी उपस्थिति इस सांस्कृतिक अनुष्ठान को नव ऊर्जा एवं भव्यता प्रदान करेगी।"',
-        eventDate: card.event_date || s.event_date || '15-17 नवंबर 2026',
-        eventTime: card.event_time || s.event_time || 'सायं 5:00 बजे से',
-        eventVenue: card.event_venue || s.event_venue || 'मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर',
-        organizer: s.organizer_name || 'समस्त आयोजन समिति, सदानीरा महोत्सव न्यास'
+        programName: s.program_name,
+        programSubtitle: s.program_subtitle,
+        invocation: s.invocation,
+        invitationMessage: s.invitation_message,
+        eventDate: s.event_date,
+        eventTime: s.event_time,
+        eventVenue: s.event_venue,
+        organizer: s.organizer_name
       });
 
       // Update meta info
@@ -747,6 +941,28 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       regenerateModal.showModal();
+
+      // Mobile responsive auto-scaling for modal preview card
+      requestAnimationFrame(() => {
+        const cardNode = modalContainer.querySelector('.invitation-card');
+        const modalBody = modalContainer.closest('.dialog-body');
+        if (cardNode && modalBody) {
+          const availWidth = modalBody.clientWidth - 20;
+          if (availWidth > 60 && availWidth < 720) {
+            const scale = Math.min(0.85, Math.max(0.26, availWidth / 720));
+            cardNode.style.transform = `scale(${scale})`;
+            cardNode.style.transformOrigin = 'top center';
+            const originH = 1040;
+            const scaledH = originH * scale;
+            cardNode.style.height = `${originH}px`;
+            cardNode.style.marginBottom = `${-(originH - scaledH)}px`;
+          } else if (cardNode) {
+            cardNode.style.transform = 'none';
+            cardNode.style.height = '';
+            cardNode.style.marginBottom = '';
+          }
+        }
+      });
     } catch (err) {
       showToast('रिकॉर्ड प्राप्त करने में विफल: ' + err.message, 'error');
     }
@@ -821,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const res = await API.getAdmins();
-      renderAdminsTable(res.users || []);
+      renderAdminsTable(res.admins || res.users || []);
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger); padding: 1.5rem;">त्रुटि: ${err.message}</td></tr>`;
     }
@@ -1055,8 +1271,147 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Initialize
-  checkAuth();
-  setGenderAndTitle('male');
-  applyPreviewScale();
+  // Application Startup & Auth State Resolution
+  async function initApp() {
+    try {
+      await loadMasterSettings();
+    } catch (e) {
+      console.warn('Startup settings load warning:', e);
+    }
+
+    try {
+      await checkAuth();
+    } catch (e) {
+      console.error('Startup auth check error:', e);
+      document.body.classList.add('is-unauthenticated');
+      openLoginModal(false);
+    } finally {
+      // Guaranteed clean exit from initial startup splash
+      hideSplash();
+    }
+
+    setGenderAndTitle('male');
+    fitPreviewToContainer();
+    setTimeout(fitPreviewToContainer, 100);
+  }
+
+  initApp();
+
+  // Progressive Web App (PWA) Service Worker Registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('PWA service worker registration notice:', err);
+      });
+    });
+  }
+
+  // Floating In-App Install Prompt (Bottom-Right, Minimal, Auto-hiding)
+  let deferredInstallPrompt = null;
+  let installPromptTimer = null;
+  const floatingPrompt = document.getElementById('floatingInstallPrompt');
+  const btnFloatingInstall = document.getElementById('btnFloatingInstall');
+  const btnDismissInstall = document.getElementById('btnDismissInstall');
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                       window.navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+
+  function showInstallPromptOnce() {
+    if (isStandalone) return;
+    if (sessionStorage.getItem('sadanira_install_dismissed') === '1') return;
+    if (!floatingPrompt) return;
+
+    // Show unobtrusively after user opens/logs into the main page
+    setTimeout(() => {
+      if (sessionStorage.getItem('sadanira_install_dismissed') === '1') return;
+      floatingPrompt.style.display = 'inline-flex';
+      requestAnimationFrame(() => {
+        floatingPrompt.classList.add('prompt-visible');
+      });
+
+      // Auto-hide after 8 seconds of clean visibility
+      if (installPromptTimer) clearTimeout(installPromptTimer);
+      installPromptTimer = setTimeout(() => {
+        hideInstallPrompt(false);
+      }, 8000);
+    }, 1500);
+  }
+
+  function hideInstallPrompt(permanent = true) {
+    if (!floatingPrompt) return;
+    floatingPrompt.classList.remove('prompt-visible');
+    setTimeout(() => {
+      floatingPrompt.style.display = 'none';
+    }, 380);
+    if (permanent) {
+      sessionStorage.setItem('sadanira_install_dismissed', '1');
+    }
+    if (installPromptTimer) clearTimeout(installPromptTimer);
+  }
+
+  if (floatingPrompt && btnFloatingInstall && !isStandalone) {
+    // Dismiss button click
+    btnDismissInstall?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideInstallPrompt(true);
+    });
+
+    // Install trigger
+    btnFloatingInstall.addEventListener('click', async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          hideInstallPrompt(true);
+          showToast('सदानीरा ऐप इंस्टॉल हो रहा है!', 'success');
+        }
+        deferredInstallPrompt = null;
+      } else if (isIOS) {
+        showToast('iPhone/iPad पर इंस्टॉल करने के लिए Safari में Share बटन (⬆️) दबाकर "Add to Home Screen" चुनें।', 'info');
+        hideInstallPrompt(true);
+      } else {
+        showToast('ब्राउज़र मेनू से "Install App" या "Add to Home Screen" चुनें।', 'info');
+        hideInstallPrompt(true);
+      }
+    });
+
+    // Pause timer on hover, resume on mouse leave
+    floatingPrompt.addEventListener('mouseenter', () => {
+      if (installPromptTimer) clearTimeout(installPromptTimer);
+    });
+    floatingPrompt.addEventListener('mouseleave', () => {
+      if (installPromptTimer) clearTimeout(installPromptTimer);
+      installPromptTimer = setTimeout(() => {
+        hideInstallPrompt(false);
+      }, 3500);
+    });
+
+    // Listen for Chromium beforeinstallprompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      if (state.user) {
+        showInstallPromptOnce();
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      hideInstallPrompt(true);
+      showToast('सदानीरा ऐप सफलतापूर्वक इंस्टॉल हो गया!', 'success');
+    });
+
+    // If user already logged in
+    if (state.user) {
+      showInstallPromptOnce();
+    }
+  }
+
+  // Offline / Online Connectivity Alerts
+  window.addEventListener('offline', () => {
+    showToast('⚠️ आप ऑफ़लाइन हैं। सहेजा गया डेटा इस्तेमाल किया जा रहा है।', 'info');
+  });
+  window.addEventListener('online', () => {
+    showToast('✅ इंटरनेट पुनः कनेक्ट हो गया है।', 'success');
+  });
 });

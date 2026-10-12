@@ -6,32 +6,13 @@ const fs = require('fs');
 const crypto = require('crypto');
 const db = require('../db');
 const { authenticateToken } = require('../auth');
+const driveService = require('../services/driveService');
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '..', '..', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Multer storage config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname) || '.jpg';
-    const unique = `${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
-    cb(null, unique);
-  }
-});
-
+// Multer memory storage config - NEVER writes photos to local container filesystem
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
-
-// Protect all card routes with authentication
-router.use(authenticateToken);
 
 // Helper function to calculate data checksum
 function calculateChecksum(fields, photoHash) {
@@ -46,8 +27,37 @@ function calculateChecksum(fields, photoHash) {
   return hash.digest('hex');
 }
 
+// PUBLIC PHOTO PROXY ROUTE: Serves Google Drive photos reliably without CORS issues
+// Must be registered BEFORE authenticateToken so invitation cards can be viewed anywhere
+router.get('/photo/drive/:fileId', async (req, res) => {
+  try {
+    const fileId = req.params.fileId;
+    if (!fileId) {
+      return res.status(400).send('File ID required');
+    }
+
+    const photoData = await driveService.fetchPhotoBuffer(fileId);
+
+    if (!photoData || !photoData.buffer) {
+      // Fallback redirect to direct Google CDN if available
+      return res.redirect(`https://lh3.googleusercontent.com/d/${fileId}`);
+    }
+
+    res.setHeader('Content-Type', photoData.contentType || 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(photoData.buffer);
+  } catch (err) {
+    console.error('Photo proxy error:', err.message);
+    res.redirect(`https://lh3.googleusercontent.com/d/${req.params.fileId}`);
+  }
+});
+
+// Protect all remaining card management routes with authentication
+router.use(authenticateToken);
+
 // POST /api/cards - Create and record new invitation card
-router.post('/', upload.single('photo'), (req, res) => {
+router.post('/', upload.single('photo'), async (req, res) => {
   try {
     const {
       title,
@@ -62,11 +72,11 @@ router.post('/', upload.single('photo'), (req, res) => {
       photo_base64
     } = req.body;
 
-    // Retrieve master event settings as defaults if not provided
-    const masterSettings = db.prepare('SELECT * FROM event_settings WHERE id = 1').get() || {};
-    const finalEventDate = (event_date && event_date.trim()) || masterSettings.event_date || '15-17 नवंबर 2026';
-    const finalEventTime = (event_time && event_time.trim()) || masterSettings.event_time || 'सायं 5:00 बजे से';
-    const finalEventVenue = (event_venue && event_venue.trim()) || masterSettings.event_venue || 'मुख्य सांस्कृतिक प्रेक्षागृह, सदानीरा परिसर';
+    // Retrieve master event settings as authoritative source
+    const masterSettings = (await db.prepare('SELECT * FROM event_settings WHERE id = 1').get()) || {};
+    const finalEventDate = masterSettings.event_date || (event_date && event_date.trim()) || '';
+    const finalEventTime = masterSettings.event_time || (event_time && event_time.trim()) || '';
+    const finalEventVenue = masterSettings.event_venue || (event_venue && event_venue.trim()) || '';
 
     // Checksum validation: Ensure NO mandatory field is left blank
     const missing = [];
@@ -75,35 +85,26 @@ router.post('/', upload.single('photo'), (req, res) => {
     if (!guest_name || !guest_name.trim()) missing.push('Guest Name');
     if (!guest_about || !guest_about.trim()) missing.push('Guest About / Profession');
 
-    let photoFilename = '';
+    let photoBuffer = null;
     let photoBufferForHash = '';
 
-    // Handle uploaded file or base64 cropped data
-    if (req.file) {
-      photoFilename = req.file.filename;
-      photoBufferForHash = fs.readFileSync(req.file.path).slice(0, 1024).toString('hex');
+    // Extract photo from uploaded multipart buffer or base64 data URL
+    if (req.file && req.file.buffer && req.file.buffer.length > 0) {
+      photoBuffer = req.file.buffer;
     } else if (photo_base64 && photo_base64.startsWith('data:image')) {
       const matches = photo_base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
       if (matches && matches.length === 3) {
-        const ext = matches[1].includes('png') ? '.png' : '.jpg';
-        const buffer = Buffer.from(matches[2], 'base64');
-        const filename = `crop_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
-        const savePath = path.join(uploadDir, filename);
-        fs.writeFileSync(savePath, buffer);
-        photoFilename = filename;
-        photoBufferForHash = buffer.slice(0, 1024).toString('hex');
+        photoBuffer = Buffer.from(matches[2], 'base64');
       }
     }
 
-    if (!photoFilename) {
+    if (!photoBuffer || photoBuffer.length === 0) {
       missing.push('Guest Photo (Cropped image is required)');
+    } else {
+      photoBufferForHash = photoBuffer.slice(0, 1024).toString('hex');
     }
 
     if (missing.length > 0) {
-      // Clean up uploaded file if validation failed
-      if (photoFilename && fs.existsSync(path.join(uploadDir, photoFilename))) {
-        try { fs.unlinkSync(path.join(uploadDir, photoFilename)); } catch (e) {}
-      }
       return res.status(400).json({
         success: false,
         message: `Validation Checksum Failed: Missing required fields [${missing.join(', ')}]. No details can be left blank.`
@@ -111,21 +112,17 @@ router.post('/', upload.single('photo'), (req, res) => {
     }
 
     // Permanent card numbering: the first 4 digits represent the lifetime card sequence; the suffix is a compact 4-digit unique code.
-    // This counter is independent of the number of rows, so deleted cards never cause reuse.
-    const nextNumber = db.transaction(() => {
-      const current = db.prepare('SELECT last_number FROM card_sequence WHERE id = 1').get().last_number;
-      if (current >= 9999) {
-        throw new Error('Maximum 4-digit card serial limit (9999) reached.');
-      }
-      const next = current + 1;
-      db.prepare('UPDATE card_sequence SET last_number = ? WHERE id = 1').run(next);
-      return next;
-    })();
+    const seqRow = await db.prepare('SELECT last_number FROM card_sequence WHERE id = 1').get();
+    const currentSeq = seqRow ? parseInt(seqRow.last_number, 10) : 0;
+    if (currentSeq >= 9999) {
+      throw new Error('Maximum 4-digit card serial limit (9999) reached.');
+    }
+    const nextNumber = currentSeq + 1;
+    await db.prepare('UPDATE card_sequence SET last_number = ? WHERE id = 1').run(nextNumber);
 
     const firstFourDigits = String(nextNumber).padStart(4, '0');
 
-    // The suffix is a cryptographically-random 4-digit value. It is checked against the DB
-    // before use, so an accidental collision is retried rather than producing a duplicate ID.
+    // The suffix is a cryptographically-random 4-digit value.
     let suffix = '';
     let cardSerial = '';
     let cardCode = '';
@@ -133,10 +130,11 @@ router.post('/', upload.single('photo'), (req, res) => {
       suffix = String(crypto.randomInt(1000, 10000));
       cardSerial = `${firstFourDigits}-${suffix}`;
       cardCode = `SN-${cardSerial}`;
-      const exists = db.prepare('SELECT id FROM invitations WHERE card_code = ?').get(cardCode);
+      const exists = await db.prepare('SELECT id FROM invitations WHERE card_code = ?').get(cardCode);
       if (!exists) break;
       suffix = '';
     }
+
     if (!suffix) {
       throw new Error('Unable to allocate a unique card ID. Please try again.');
     }
@@ -147,17 +145,35 @@ router.post('/', upload.single('photo'), (req, res) => {
       photoBufferForHash
     );
 
-    const photoUrl = `/uploads/${photoFilename}`;
+    // CENTRALIZED PERSISTENT STORAGE: Google Drive
+    // Uploads 500x500 JPEG directly to centralized Google Drive folder
+    let photoUrl = '';
+    let driveFileId = null;
 
-    const insert = db.prepare(`
+    try {
+      const uploadResult = await driveService.uploadPhoto({
+        buffer: photoBuffer,
+        filename: `card_${cardSerial}_${Date.now()}.jpg`
+      });
+      photoUrl = uploadResult.proxyUrl;
+      driveFileId = uploadResult.fileId;
+      console.log(`[CardRoutes] Uploaded guest photo to centralized Google Drive: ${driveFileId}`);
+    } catch (uploadErr) {
+      console.error('[CardRoutes] Centralized Google Drive upload error:', uploadErr.message);
+      // Strictly do NOT silently store base64 in Firestore! Return a clear upload error.
+      return res.status(500).json({
+        success: false,
+        message: `Google Drive photo upload failed: ${uploadErr.message}. Card creation aborted to maintain data integrity.`
+      });
+    }
+
+    const insertResult = await db.prepare(`
       INSERT INTO invitations (
         card_code, card_serial, title, gender, guest_name, guest_about, guest_badge, photo_url,
         theme, event_date, event_time, event_venue, checksum,
         created_by_id, created_by_name, created_by_username
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = insert.run(
+    `).run(
       cardCode,
       cardSerial,
       title.trim(),
@@ -176,21 +192,22 @@ router.post('/', upload.single('photo'), (req, res) => {
       req.user.username
     );
 
-    const newCard = db.prepare('SELECT * FROM invitations WHERE id = ?').get(result.lastInsertRowid);
+    const newCard = await db.prepare('SELECT * FROM invitations WHERE id = ?').get(insertResult.lastInsertRowid);
 
     res.status(201).json({
       success: true,
       message: 'Invitation record registered successfully. Ready for instant regeneration & download.',
-      card: newCard
+      card: newCard,
+      storage: driveFileId ? 'google_drive' : 'firestore_direct'
     });
   } catch (err) {
     console.error('Card creation error:', err);
-    res.status(500).json({ success: false, message: 'Failed to record invitation card.' });
+    res.status(500).json({ success: false, message: 'Failed to record invitation card: ' + err.message });
   }
 });
 
 // GET /api/cards - List invitation card records with search & filters
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { search, created_by, theme, limit = 50, offset = 0 } = req.query;
 
@@ -228,7 +245,7 @@ router.get('/', (req, res) => {
     query += ` ORDER BY i.id DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit, 10), parseInt(offset, 10));
 
-    const cards = db.prepare(query).all(...params);
+    const cards = await db.prepare(query).all(...params);
 
     // Total count for pagination
     let countQuery = `SELECT COUNT(*) AS total FROM invitations i WHERE 1=1`;
@@ -252,7 +269,8 @@ router.get('/', (req, res) => {
       countParams.push(theme);
     }
 
-    const totalCount = db.prepare(countQuery).get(...countParams).total;
+    const totalCountRow = await db.prepare(countQuery).get(...countParams);
+    const totalCount = totalCountRow ? parseInt(totalCountRow.total, 10) : 0;
 
     res.json({
       success: true,
@@ -268,9 +286,9 @@ router.get('/', (req, res) => {
 });
 
 // GET /api/cards/:id - Fetch single card details for on-the-fly regeneration
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const card = db.prepare(`
+    const card = await db.prepare(`
       SELECT i.*, u.role AS creator_role
       FROM invitations i
       LEFT JOIN users u ON i.created_by_id = u.id
@@ -281,8 +299,7 @@ router.get('/:id', (req, res) => {
       return res.status(404).json({ success: false, message: 'Invitation record not found.' });
     }
 
-    const masterSettings = db.prepare('SELECT * FROM event_settings WHERE id = 1').get() || {};
-
+    const masterSettings = (await db.prepare('SELECT * FROM event_settings WHERE id = 1').get()) || {};
     res.json({ success: true, card, masterSettings });
   } catch (err) {
     console.error('Fetch single card error:', err);
@@ -290,19 +307,14 @@ router.get('/:id', (req, res) => {
   }
 });
 
-// DELETE /api/cards/:id - Soft-delete an invitation record.
-// The record and guest photo are deliberately retained for audit/misuse traceability.
-router.delete('/:id', (req, res) => {
+// DELETE /api/cards/:id - Soft-delete or permanent delete an invitation record
+router.delete('/:id', async (req, res) => {
   try {
     const cardId = req.params.id;
-    const card = db.prepare('SELECT * FROM invitations WHERE id = ?').get(cardId);
+    const card = await db.prepare('SELECT * FROM invitations WHERE id = ?').get(cardId);
 
     if (!card) {
       return res.status(404).json({ success: false, message: 'Invitation record not found.' });
-    }
-
-    if (card.is_deleted === 1) {
-      return res.status(400).json({ success: false, message: 'यह कार्ड पहले ही डिलीट मार्क किया जा चुका है।' });
     }
 
     if (req.user.role !== 'superadmin' && card.created_by_id !== req.user.id) {
@@ -312,27 +324,56 @@ router.delete('/:id', (req, res) => {
       });
     }
 
-    db.prepare(`
-      UPDATE invitations
-      SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP,
-          deleted_by_id = ?, deleted_by_name = ?, deleted_by_username = ?
-      WHERE id = ?
-    `).run(req.user.id, req.user.full_name, req.user.username, cardId);
+    const isPermanent = req.query.permanent === 'true' || card.is_deleted === 1;
+    if (isPermanent) {
+      // 1. If card has an associated Google Drive file, delete it permanently from Google Drive
+      let driveId = card.drive_file_id || null;
+      if (!driveId && card.photo_url && card.photo_url.includes('/drive/')) {
+        const parts = card.photo_url.split('/drive/');
+        if (parts.length > 1) {
+          driveId = parts[1].split('?')[0];
+        }
+      }
+      if (driveId && typeof driveId === 'string' && driveId.trim() && !driveId.includes('crop_') && !driveId.startsWith('data:')) {
+        try {
+          await driveService.deletePhoto(driveId.trim());
+        } catch (driveErr) {
+          console.warn('[CardRoutes] Notice deleting Drive photo during permanent delete:', driveErr.message);
+        }
+      }
+
+      // If it was an old local upload file, attempt safe removal
+      if (card.photo_url && card.photo_url.startsWith('/uploads/')) {
+        const filePath = path.join(__dirname, '..', '..', card.photo_url);
+        try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (e) {}
+      }
+      await db.prepare('DELETE FROM invitations WHERE id = ?').run(cardId);
+    } else {
+      // Soft Delete: NEVER deletes the photo from Google Drive!
+      await db.prepare(`
+        UPDATE invitations
+        SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP,
+            deleted_by_id = ?, deleted_by_name = ?, deleted_by_username = ?
+        WHERE id = ?
+      `).run(req.user.id, req.user.full_name, req.user.username, cardId);
+    }
 
     res.json({
       success: true,
-      message: `Invitation ${card.card_code} को डिलीट मार्क कर दिया गया है। रिकॉर्ड और फोटो सुरक्षित रखे गए हैं।`
+      message: isPermanent
+        ? `Invitation ${card.card_code} को डेटाबेस से स्थायी रूप से हटा दिया गया है।`
+        : `Invitation ${card.card_code} को डिलीट मार्क कर दिया गया है।`
     });
   } catch (err) {
-    console.error('Soft delete card error:', err);
+    console.error('Delete card error:', err);
     res.status(500).json({ success: false, message: 'Failed to mark invitation as deleted.' });
   }
 });
 
 // GET /api/cards/export/csv - Export records to CSV
-router.get('/export/csv', (req, res) => {
+router.get('/export/csv', async (req, res) => {
   try {
-    const cards = db.prepare(`
+    const cards = await db.prepare(`
       SELECT 
         card_code, title, guest_name, gender, guest_about, theme, 
         checksum, created_by_name, created_by_username, created_at

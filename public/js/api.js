@@ -8,12 +8,18 @@ const API = {
   USER_KEY: 'sadaneera_user',
 
   getToken() {
-    return localStorage.getItem(this.TOKEN_KEY);
+    const t = localStorage.getItem(this.TOKEN_KEY);
+    if (!t || t === 'undefined' || t === 'null' || t.trim() === '') {
+      return null;
+    }
+    return t;
   },
 
   setSession(token, user) {
-    localStorage.setItem(this.TOKEN_KEY, token);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    if (token && user) {
+      localStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    }
   },
 
   clearSession() {
@@ -24,7 +30,9 @@ const API = {
   getCurrentUser() {
     const raw = localStorage.getItem(this.USER_KEY);
     try {
-      return raw ? JSON.parse(raw) : null;
+      const u = raw ? JSON.parse(raw) : null;
+      if (!u || typeof u !== 'object' || !u.id) return null;
+      return u;
     } catch {
       return null;
     }
@@ -43,17 +51,30 @@ const API = {
       headers['Content-Type'] = 'application/json';
     }
 
+    const controller = new AbortController();
+    const timeoutMs = options.timeout || 10000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
       const res = await fetch(endpoint, {
         ...options,
-        headers
+        headers,
+        signal: options.signal || controller.signal
       });
+      clearTimeout(timeoutId);
 
-      const data = await res.json().catch(() => ({ success: false, message: 'Invalid response from server' }));
+      let data;
+      const rawText = await res.text().catch(() => '');
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        data = { success: false, message: rawText ? rawText.slice(0, 150) : 'Server returned non-JSON response' };
+      }
 
-      if (res.status === 401 || res.status === 403) {
-        if (data.message && data.message.includes('expired') || res.status === 401) {
-          // If session expired, trigger login modal
+      // Only dispatch auth:expired for active authenticated endpoints during user activity
+      // Do NOT dispatch on /api/auth/login (bad credentials) or initial /api/auth/me verification
+      if (token && endpoint !== '/api/auth/login' && endpoint !== '/api/auth/me') {
+        if (res.status === 401 || (res.status === 403 && data.message && (data.message.includes('expired') || data.message.includes('deactivated') || data.message.includes('token')))) {
           window.dispatchEvent(new CustomEvent('auth:expired', { detail: data.message }));
         }
       }
@@ -64,6 +85,10 @@ const API = {
 
       return data;
     } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        throw new Error(`Request timed out after ${timeoutMs / 1000}s`);
+      }
       console.error(`API Error on ${endpoint}:`, err);
       throw err;
     }
@@ -83,6 +108,16 @@ const API = {
 
   async getMe() {
     return this.request('/api/auth/me');
+  },
+
+  async logout() {
+    try {
+      await this.request('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      // Ignore network issues during logout
+    } finally {
+      this.clearSession();
+    }
   },
 
   // Admin Management Endpoints (Super Admin Only)
